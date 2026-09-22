@@ -5,6 +5,7 @@ gnome = import('gnome')
 blueprints = files(
   'ui/window.blp',
   'ui/shortcuts.blp',
+  'ui/setup.blp',
   'ui/preferences/preferences.blp',
   'ui/preferences/extension_stores.blp',
 

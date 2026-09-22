@@ -11,28 +11,24 @@ def markdown_to_pango(md: str) -> str:
     def inline(text: str) -> str:
         text = GLib.markup_escape_text(text or "")
 
-        # inline code
         text = re.sub(
             r"`([^`]+)`",
             r'<tt>\1</tt>',
             text,
         )
 
-        # bold
         text = re.sub(
             r"\*\*(.+?)\*\*",
             r"<b>\1</b>",
             text,
         )
 
-        # italic
         text = re.sub(
             r"(?<!\*)\*(.+?)\*(?!\*)",
             r"<i>\1</i>",
             text,
         )
 
-        # links
         text = re.sub(
             r"\[(.*?)\]\((.*?)\)",
             r'<a href="\2">\1</a>',
@@ -51,7 +47,6 @@ def markdown_to_pango(md: str) -> str:
             out.append("")
             continue
 
-        # headings
         m = re.match(r"^(#{1,6})\s+(.*)$", stripped)
         if m:
             level = len(m.group(1))
@@ -69,7 +64,6 @@ def markdown_to_pango(md: str) -> str:
             )
             continue
 
-        # bullet list
         m = re.match(r"^[-*]\s+(.*)$", stripped)
         if m:
             out.append(f"• {inline(m.group(1))}")
@@ -113,9 +107,6 @@ class MangaPage(Adw.NavigationPage):
 
     @Gtk.Template.Callback()
     def populate_genres(self, obj, genre):
-        # Bound to the model's genre in the blueprint, so it runs when the page
-        # gets its model and again whenever the genre list changes. Nothing has
-        # to call it. The returned bool hides the box when there are no genres.
         while child := self.genres.get_first_child():
             self.genres.remove(child)
         for name in genre or []:

@@ -1,9 +1,5 @@
 from gql import gql
 
-# GraphQL field -> model property. Only fields present in a payload are applied,
-# so a partial node like `firstUnreadChapter { id }` can't reset a loaded chapter.
-# CHAPTER_FULL_FIELDS is generated from this dict so the fetched fields and the
-# fields fillChapter knows how to apply can never drift apart.
 CHAPTER_FIELDS = {
     'sourceOrder': 'source_order',
     'chapterNumber': 'chapter_number',
@@ -17,7 +13,6 @@ CHAPTER_FIELDS = {
 }
 CHAPTER_FULL_FIELDS = "id\n" + "\n".join(CHAPTER_FIELDS)
 
-# Same idea for Extension: EXTENSION_FULL_FIELDS is generated from this dict.
 EXTENSION_FIELDS = {
     'name': 'name',
     'lang': 'lang',
@@ -32,10 +27,6 @@ EXTENSION_FIELDS = {
 }
 EXTENSION_FULL_FIELDS = "pkgName\niconUrl\n" + "\n".join(EXTENSION_FIELDS)
 
-# Manga's core scalars, shared by every query that returns a manga node.
-# firstUnreadChapter/lastReadChapter/chapters are deliberately NOT in here —
-# different queries need different depths there (full chapter vs. just {id}),
-# and that's intentional, not something to collapse.
 MANGA_CORE_FIELDS = """
   id
   title
@@ -111,8 +102,6 @@ mutation FetchMangaAndChapters($id: Int!, $fetchManga: Boolean!, $fetchChapters:
 }
 """)
 
-# Dedicated per-manga chapter list, matching the webui's GET_CHAPTERS_MANGA —
-# a plain DB read, independent of manga metadata, no source refetch triggered.
 GET_CHAPTERS_MANGA = gql("""
 query GetChaptersManga($mangaId: Int!, $first: Int, $after: Cursor) {
   chapters(condition: { mangaId: $mangaId }, first: $first, after: $after) {
@@ -125,8 +114,6 @@ query GetChaptersManga($mangaId: Int!, $first: Int, $after: Cursor) {
 }
 """)
 
-# install/update/uninstall are all the same mutation, just a different patch
-# flag, so this covers all three (see changeExtension in suwayomi.py).
 UPDATE_EXTENSION = gql("""
 mutation UpdateExtension($pkgName: String!, $install: Boolean, $update: Boolean, $uninstall: Boolean) {
   updateExtension(

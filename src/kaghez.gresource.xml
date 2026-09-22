@@ -17,6 +17,7 @@
     <file>icons/panel-right-symbolic.svg</file>
 
     <file alias="window.ui">ui/window.ui</file>
+    <file alias="setup.ui">ui/setup.ui</file>
     <file alias="shortcuts.ui">ui/shortcuts.ui</file>
     <file alias="preferences/preferences.ui">ui/preferences/preferences.ui</file>
     <file alias="preferences/extension_stores.ui">ui/preferences/extension_stores.ui</file>

@@ -6,10 +6,7 @@ from ...integrations import models
 from .base import ReaderBase
 from .canvas import Canvas
 
-# How close to the loaded edge (in pages) before the next/previous chapter
-# starts loading.
 PREFETCH_PAGES = 5
-# Banner pages get a fixed, short-and-wide ratio instead of an image's.
 BANNER_RATIO = 2.2
 
 
@@ -67,10 +64,8 @@ class WebtoonReader(ReaderBase):
 
         self.connect("notify::chapter-model", self.on_chapter_model_changed)
 
-    # reader interface
 
     def bind_store(self, store: Gio.ListStore):
-        # Pages come from our own continuous store instead; nothing to bind.
         pass
 
     @GObject.Property(type=int, default=0)
@@ -85,12 +80,9 @@ class WebtoonReader(ReaderBase):
         if index is not None:
             self.canvas.scroll_to_index(index)
 
-    # chapters
 
     def on_chapter_model_changed(self, reader, param):
         chapter = self.chapter_model
-        # Already part of the strip - we put it there ourselves while
-        # scrolling - so there is nothing to (re)load.
         if chapter is None or self.find_range(chapter) is not None:
             return
         self.chapters = []
@@ -122,7 +114,6 @@ class WebtoonReader(ReaderBase):
             return self.manga_model.chapters.get_item(index)
         return None
 
-    # loading
 
     def queue_chapter_load(self, chapter, prepend: bool):
         asyncio.create_task(self.load_chapter_pages(chapter, prepend))
@@ -142,8 +133,6 @@ class WebtoonReader(ReaderBase):
             else:
                 self.loading_after = False
 
-        # No banner before the very first chapter - the reader opens
-        # straight into it, nothing to announce.
         banner = [TransitionPage(chapter)] if self.chapters else []
         block = banner + pages
 
@@ -162,9 +151,6 @@ class WebtoonReader(ReaderBase):
         if banner:
             self.canvas.set_ratio(banner_index, BANNER_RATIO)
 
-        # Re-resolve and re-apply: a prepend shifted the current chapter's
-        # global index, and a fresh chapter's own load makes it resolvable
-        # for the first time.
         self.position = self.current_position
 
     def maybe_prefetch(self, index):
@@ -183,7 +169,6 @@ class WebtoonReader(ReaderBase):
             if next_chapter:
                 self.queue_chapter_load(next_chapter, prepend=False)
 
-    # scroll tracking
 
     def on_page_changed(self, canvas, index):
         self.maybe_prefetch(index)
@@ -194,8 +179,6 @@ class WebtoonReader(ReaderBase):
 
         if chapter_range.model.id != self.chapter_model.id:
             self.mark_chapter_read(self.chapter_model)
-            # Bidirectional binding pushes this up to ReaderPage: title and
-            # progress tracking follow along automatically.
             self.chapter_model = chapter_range.model
 
         position = index - chapter_range.start

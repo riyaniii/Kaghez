@@ -74,10 +74,6 @@ class SearchPage(Adw.NavigationPage):
             self.main_box.append(row)
             tasks.append(self.search_source(source, row, query))
 
-        # No finally: when this search is cancelled by a newer one, the code
-        # below must not run, or it would reset the new search's progress and
-        # flash "empty". return_exceptions=True means gather only raises on
-        # cancellation.
         await asyncio.gather(*tasks, return_exceptions=True)
         self.reset_progress()
         if len(list(self.main_box)) == 0:

@@ -29,13 +29,11 @@ class DownloadRow(Gtk.Box):
 
         self.handle.set_cursor_from_name("grab")
 
-        # Only the handle starts a drag, so buttons and text stay clickable.
         drag_source = Gtk.DragSource(actions=Gdk.DragAction.MOVE)
         drag_source.connect("prepare", self.on_drag_prepare)
         drag_source.connect("drag-begin", self.on_drag_begin)
         self.handle.add_controller(drag_source)
 
-        # The whole row accepts drops; the payload is the dragged chapter id.
         drop_target = Gtk.DropTarget.new(GObject.TYPE_INT, Gdk.DragAction.MOVE)
         drop_target.connect("enter", self.on_drop_enter)
         drop_target.connect("leave", self.on_drop_leave)

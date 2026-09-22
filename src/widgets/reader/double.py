@@ -65,7 +65,6 @@ class DoublePageReader(ReaderBase):
         if self.store:
             self.show_current()
 
-    # ---- internal ----
 
     def cancel_tasks(self):
         if self.left_task:

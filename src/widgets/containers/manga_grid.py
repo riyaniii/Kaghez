@@ -35,9 +35,6 @@ class MangaGrid(Adw.BreakpointBin):
         self.grid.set_factory(factory)
 
     def bind_store(self, store: Gio.ListStore):
-        # Shows a store owned elsewhere (e.g. Suwayomi.library) instead of the
-        # local one. After this, set_items/remove_all would change that store,
-        # so use one or the other.
         self.store = store
         self.filter_model.set_model(store)
 
@@ -69,7 +66,6 @@ class MangaGrid(Adw.BreakpointBin):
             card.thumbnail_task = None
 
         item = list_item.get_item()
-        # So that the paintable no longer takes up memory within loaded_models within Suwayomi
         item.paintable = None
 
         card.model = None

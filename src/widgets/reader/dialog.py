@@ -19,11 +19,6 @@ class SettingsDialog(Adw.Dialog):
 
         webtoon_reader = self.stack.get_child_by_name("webtoon")
 
-        # Setting selected here is initialization, not a user pick - but the
-        # row can't tell the difference, so it fires notify::selected the
-        # same as a real one whenever this transitions its own default (0).
-        # Muted so on_orientation_changed/on_direction_changed below don't
-        # re-apply an already-current value as if it just changed.
         self.updating = True
         if webtoon_reader.orientation == Gtk.Orientation.HORIZONTAL:
             self.orientation_row.set_selected(1)

@@ -12,8 +12,6 @@ class ModeOption:
     icon_name: str
 
 
-# Same three readers the app actually has (see ReaderPage.READERS) — the
-# global preference can only pick among these, matching the per-chapter one.
 MODE_OPTIONS = [
     ModeOption("webtoon", "Webtoon", "view-continuous-symbolic"),
     ModeOption("single", "Single Page", "view-paged-symbolic"),
@@ -36,10 +34,6 @@ class KaghezPreferences(Adw.PreferencesDialog):
         super().__init__()
         self.suwayomi = Gio.Application.get_default().suwayomi
 
-        # A ViewStack that's never actually shown - it only exists to back
-        # the InlineViewSwitcher's page model, same idea as SettingsDialog
-        # reusing the reader's real stack, except here there's no reader
-        # open yet so we build a standalone one.
         self.mode_stack = Adw.ViewStack()
         for option in MODE_OPTIONS:
             self.mode_stack.add_titled_with_icon(
@@ -63,12 +57,10 @@ class KaghezPreferences(Adw.PreferencesDialog):
         self.update_orientation_sensitivity()
 
     def update_orientation_sensitivity(self):
-        # Orientation only means something for the webtoon reader.
         is_webtoon = self.mode_stack.get_visible_child_name() == "webtoon"
         self.orientation_row.set_sensitive(self.loaded and is_webtoon)
 
     def save_reading_mode(self):
-        # Ignore the changes that load() makes while filling in the server values
         if self.loaded:
             orientation = "horizontal" if self.orientation_row.get_selected() == 1 else "vertical"
             asyncio.create_task(self.suwayomi.setGlobalReadingMode(
@@ -91,7 +83,6 @@ class KaghezPreferences(Adw.PreferencesDialog):
 
     @Gtk.Template.Callback()
     def on_cbz_toggled(self, row, pspec):
-        # Ignore the change that load() makes while filling in the server value
         if self.loaded:
             asyncio.create_task(self.suwayomi.setDownloadAsCbz(row.get_active()))
 

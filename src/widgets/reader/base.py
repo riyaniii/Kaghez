@@ -11,8 +11,6 @@ class ReaderBase(Adw.Bin):
 
     @GObject.Signal(arg_types=(int,))
     def chapter_requested(self, direction):
-        # Emitted when next/previous is pressed at the edge of the chapter.
-        # direction is 1 for the next chapter, -1 for the previous one.
         pass
 
     def __init__(self, **kwargs):

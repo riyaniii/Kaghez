@@ -1,7 +1,8 @@
 widget_sources = [
   '__init__.py',
   'window.py',
-  'shortcuts.py'
+  'shortcuts.py',
+  'setup.py'
 ]
 
 install_data(widget_sources, install_dir: moduledir / 'widgets')

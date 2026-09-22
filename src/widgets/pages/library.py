@@ -18,8 +18,6 @@ class LibraryPage(Adw.NavigationPage):
         super().__init__()
         self.suwayomi = Gio.Application.get_default().suwayomi
 
-        # The library store is owned by Suwayomi, so the grid and the size
-        # follow it live (including add/remove from library).
         library = self.suwayomi.library
         self.manga_grid.bind_store(library)
         library.bind_property("n-items", self, "library_size", GObject.BindingFlags.SYNC_CREATE)

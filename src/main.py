@@ -1,22 +1,3 @@
-# main.py
-#
-# Copyright 2026 riyani
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# SPDX-License-Identifier: GPL-3.0-or-later
-
 import sys
 import gi
 import asyncio
@@ -31,6 +12,7 @@ asyncio.set_event_loop_policy(GLibEventLoopPolicy())
 from gi.repository import Gtk, Gio, Adw, GObject
 from .widgets import KaghezWindow, build_shortcuts
 from .widgets.preferences import KaghezPreferences
+from .widgets.setup import SetupWindow
 
 from .integrations import Suwayomi
 
@@ -58,14 +40,26 @@ class KaghezApplication(Adw.Application):
         """
         win = self.props.active_window
         if not win:
+            url = self.settings.get_string('suwayomi-url')
+            if not url:
+                self.show_setup_window()
+                return
+            self.suwayomi.reconnect(url)
             win = KaghezWindow(application=self)
+        win.present()
+
+    def show_setup_window(self):
+        window = SetupWindow(application=self, on_complete=self.on_setup_complete)
+        window.present()
+
+    def on_setup_complete(self, url):
+        self.suwayomi.reconnect(url)
+        win = KaghezWindow(application=self)
         win.present()
 
     def do_shutdown(self):
         """Called right before the application exits."""
-        if self.suwayomi.session is not None:
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(self.suwayomi.close())
+        self.suwayomi.cache.close()
         Adw.Application.do_shutdown(self)
 
     def on_about_action(self, *args):
@@ -74,7 +68,6 @@ class KaghezApplication(Adw.Application):
                                 application_icon='com.rini.kaghez',
                                 developer_name='Riyan Parvez',
                                 version='0.8.7',
-                                # Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
                                 translator_credits = _('translator-credits'),
                                 developers=['riyani'],
                                 copyright='© 2026 Riyan Parvez')
@@ -107,5 +100,3 @@ def main(version):
     """The application's entry point."""
     app = KaghezApplication()
     return app.run(sys.argv)
-
-

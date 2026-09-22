@@ -26,8 +26,6 @@ class BrowsePage(Adw.NavigationPage):
 
     @Gtk.Template.Callback()
     def on_search_mode_changed(self, search_bar, *_):
-        # Closing the bar clears both searches, so a hidden filter
-        # can't keep hiding items.
         if not search_bar.get_search_mode():
             self.sources_entry.set_text("")
             self.extensions_entry.set_text("")

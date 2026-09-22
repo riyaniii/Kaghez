@@ -36,8 +36,6 @@ class SourcePage(Adw.NavigationPage):
         self.search_task = None
         self.latest_loaded = False
 
-        # Cancelling a search on the client doesn't stop the server's scrape,
-        # so wait longer before starting one.
         self.search_entry.set_search_delay(400)
         self.search_entry.connect("search-changed", self.on_search_changed)
 
@@ -45,7 +43,6 @@ class SourcePage(Adw.NavigationPage):
         self.filter_dialog = SourceFilter()
         self.filter_dialog.connect("applied", self.on_filters_applied)
 
-        # Latest is loaded the first time its tab is shown, not on open.
         asyncio.create_task(self.load_popular())
         asyncio.create_task(self.load_filters())
 
@@ -99,8 +96,6 @@ class SourcePage(Adw.NavigationPage):
             self.search_task.cancel()
             self.search_task = None
 
-        # Filters alone are a valid search, so an empty box only resets the
-        # page when no filters are set either.
         if text or self.filter_changes:
             self.set_stack_page(self.search_stack, "loading")
             self.search_task = asyncio.create_task(self.load_search(text))

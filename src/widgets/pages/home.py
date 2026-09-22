@@ -23,7 +23,6 @@ class HomePage(Adw.NavigationPage):
         asyncio.create_task(self.load())
 
     async def load(self):
-        # The library and the sources don't depend on each other.
         try:
             await asyncio.gather(self.load_library(), self.load_sources())
         finally:

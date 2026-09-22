@@ -38,7 +38,6 @@ READING_MODES = {
     4: ("webtoon", "vertical"),
 }
 
-# Webtoon is missing on purpose: its value depends on orientation (3 or 4).
 GLOBAL_MODE_VALUES = {"single": 0, "double": 1}
 
 class Suwayomi(GObject.Object):
@@ -51,11 +50,8 @@ class Suwayomi(GObject.Object):
 
     def __init__(self):
         super().__init__()
-        # Every model made this session, keyed by (type, id). A plain dict on
-        # purpose: a weak one dropped models that only a Gio.ListStore or a
-        # widget referenced, and lookups by id returned None for them.
         self.loaded_models = {}
-        transport = AIOHTTPTransport(timeout=60, url=self.get_property('url').rstrip('/') + '/api/graphql')
+        transport = AIOHTTPTransport(timeout=20, url=self.get_property('url').rstrip('/') + '/api/graphql')
         self.client = Client(transport=transport, fetch_schema_from_transport=False)
         self.session = None
         self.connect_lock = asyncio.Lock()
@@ -64,24 +60,25 @@ class Suwayomi(GObject.Object):
         self.MODE_KEY = "webUI_readingMode"
         self.DIRECTION_KEY = "webUI_readingDirection"
 
-        # Limits on parallel work. The decode limit also caps peak memory,
-        # since every decode holds a full bitmap.
         self.image_semaphore = asyncio.Semaphore(5)
         self.decode_semaphore = asyncio.Semaphore(2)
 
-        # Raw image bytes on disk, evicted least-recently-used past the limit.
         self.cache = Cache(
             str(Path(GLib.get_user_cache_dir()) / "kaghez" / "images"),
             size_limit=500 * 1024 * 1024,
             eviction_policy="least-recently-used",
         )
-        # key -> running task, so the same request never runs twice at once.
         self.pending = {}
-        # One worker, so cache writes never overlap.
         self.cache_executor = ThreadPoolExecutor(max_workers=1)
 
         self.download_queue = Gio.ListStore.new(item_type=models.Download)
         self.library = Gio.ListStore.new(item_type=models.Manga)
+
+    def reconnect(self, url: str):
+        self.session = None
+        self.set_property('url', url)
+        transport = AIOHTTPTransport(timeout=20, url=url.rstrip('/') + '/api/graphql')
+        self.client = Client(transport=transport, fetch_schema_from_transport=False)
 
     async def close(self):
         await self.http.aclose()
@@ -99,29 +96,33 @@ class Suwayomi(GObject.Object):
                     self.session = await self.client.connect_async()
         return self.session
 
-    async def query(self, gql_query, variable_values=None, raise_errors=False) -> dict:
-        # Single entry point for all GraphQL calls. A failure is logged and
-        # returns {}, unless the caller wants to handle it (raise_errors).
-        try:
-            session = await self.getSession()
-            return await session.execute(gql_query, variable_values=variable_values) or {}
-        except Exception as e:
-            print(f"[query] request failed: {type(e).__name__}: {e}")
-            if raise_errors:
-                raise
-            return {}
+    async def query(self, gql_query, variable_values=None, raise_errors=False, retries=1) -> dict:
+        for attempt in range(retries + 1):
+            try:
+                session = await self.getSession()
+                return await session.execute(gql_query, variable_values=variable_values) or {}
+            except (asyncio.TimeoutError, TimeoutError) as e:
+                if attempt < retries:
+                    await asyncio.sleep(0.5 * (attempt + 1))
+                    continue
+                print(f"[query] timed out after {attempt + 1} attempt(s)")
+                if raise_errors:
+                    raise
+                return {}
+            except Exception as e:
+                print(f"[query] request failed: {type(e).__name__}: {e}")
+                if raise_errors:
+                    raise
+                return {}
+        return {}
 
     async def shared(self, key, factory):
-        # One task per key. shield() keeps it running when a caller is
-        # cancelled (on_unbind), so the others waiting on it aren't affected
-        # and scrolling back doesn't restart it.
         if key not in self.pending:
             task = asyncio.create_task(factory())
             task.add_done_callback(lambda done: self.pending.pop(key, None))
             self.pending[key] = task
         return await asyncio.shield(self.pending[key])
 
-    # ---- images ----
 
     async def getPaintableBytes(self, url: str) -> bytes | None:
         try:
@@ -135,9 +136,6 @@ class Suwayomi(GObject.Object):
         return response.content
 
     async def getPaintable(self, url: str) -> Gdk.Paintable | None:
-        # Only the download is shared and shielded (it fills the disk cache).
-        # Waiting for a decode slot is not, so a card that scrolled away
-        # leaves the queue instead of delaying the images on screen.
         raw_bytes = await self.shared(('bytes', url), lambda: self.loadBytes(url))
         if not raw_bytes:
             return None
@@ -147,8 +145,6 @@ class Suwayomi(GObject.Object):
                 return await asyncio.to_thread(self.makeTexture, raw_bytes)
             except GLib.Error as e:
                 print(f"[getPaintable] decode failed for {url}: {e.message}")
-                # Don't keep bytes that can't be decoded. Going through the
-                # cache executor queues this after the write that stored them.
                 self.cache_executor.submit(self.cache.delete, url)
                 return None
 
@@ -164,27 +160,19 @@ class Suwayomi(GObject.Object):
         return raw_bytes
 
     def makeTexture(self, raw_bytes: bytes) -> Gdk.Texture:
-        # Runs in a worker thread: only build and return the texture, decoded
-        # at its original size.
         gbytes = GLib.Bytes.new(raw_bytes)
         try:
             return Gdk.Texture.new_from_bytes(gbytes)
         except GLib.Error:
-            # Formats Gdk.Texture can't read (WebP, AVIF...) go through Gly.
             loader = Gly.Loader.new_for_bytes(gbytes)
             frame = loader.load().next_frame()
             return GlyGtk4.frame_get_texture(frame)
 
-    # ---- models ----
 
     def getModel(self, model_id: int | str, item_type: str) -> GObject.Object | None:
-        # Plain dict lookup, no I/O involved, so this doesn't need to be async.
-        # The key type follows models.py: int for Manga and Chapter, str for
-        # Extension (pkg_name) and Source.
         return self.loaded_models.get((item_type, model_id))
 
     def makeModel(self, item: dict, item_type: str) -> GObject.Object | None:
-        # Finds or creates the model for this item, then fills it from the payload.
         if item is None:
             return None
         item_id = item.get('pkgName') if item_type == 'Extension' else item.get('id')
@@ -208,7 +196,6 @@ class Suwayomi(GObject.Object):
         return model
 
     def makeChapterStore(self, chapter_models: list) -> Gio.ListStore:
-        # One splice emits a single items-changed instead of one per append.
         store = Gio.ListStore.new(item_type=models.Chapter)
         store.splice(0, 0, chapter_models)
         return store
@@ -232,8 +219,6 @@ class Suwayomi(GObject.Object):
             thumbnail_url=urljoin(self.url, thumbnail_url) if thumbnail_url else "",
         )
 
-        # Only touch chapters when the payload carried them (GET_LIBRARY and
-        # GET_SOURCE_MANGA only send totalCount), so a loaded list stays as is.
         chapters = item.get('chapters')
         if chapters is not None:
             if 'totalCount' in chapters:
@@ -246,16 +231,10 @@ class Suwayomi(GObject.Object):
             model.set_property('chapters', self.makeChapterStore([]))
 
     def fillChapter(self, model, item: dict):
-        # Only apply fields the payload actually carried, so a partial node
-        # like `firstUnreadChapter { id }` can't reset an already-loaded chapter.
         values = {name: item[key] for key, name in CHAPTER_FIELDS.items() if key in item}
         model.update_data(id=item.get('id'), **values)
 
     def fillExtension(self, model, item: dict):
-        # Same reasoning as fillChapter: install/update/uninstall mutations
-        # don't select every field (e.g. apkUrl/jarUrl), so only apply what's
-        # actually present in the payload instead of clobbering loaded values
-        # with None.
         values = {name: item[key] for key, name in EXTENSION_FIELDS.items() if key in item}
         if 'iconUrl' in item:
             icon_url = item.get('iconUrl')
@@ -276,12 +255,8 @@ class Suwayomi(GObject.Object):
             extension_name=extension.get('name', ''),
         )
 
-    # ---- manga and chapters ----
 
     async def getManga(self, manga_id: int) -> models.Manga | None:
-        # Once a manga is initialized this is a cache hit. The first time, it
-        # fetches the manga and its chapters from the source in one call, and
-        # a second caller (double tap) waits on that same fetch.
         model = self.getModel(manga_id, 'Manga')
         if model and model.initialized:
             return model
@@ -306,7 +281,6 @@ class Suwayomi(GObject.Object):
         first: int | None = None,
         after: str | None = None,
     ) -> list:
-        # Reloads the chapter list from the server's DB (no source refetch).
         variables = {"mangaId": manga_id, "first": first, "after": after}
         result = await self.query(GET_CHAPTERS_MANGA, variable_values=variables)
         connection = result.get('chapters', {})
@@ -321,12 +295,8 @@ class Suwayomi(GObject.Object):
 
         return chapter_models
 
-    # ---- library ----
 
     async def refreshLibrary(self):
-        # Callers share one in-flight request. Like the download queue, the
-        # store only changes when the list itself changed, since the models
-        # update in place.
         await self.shared(('library',), self.loadLibrary)
 
     async def loadLibrary(self):
@@ -374,17 +344,12 @@ class Suwayomi(GObject.Object):
             "query": query,
             "filters": filters or None,
         }
-        # Raises on failure, so a dead source shows an error instead of "empty".
         result = await self.query(GET_SOURCE_MANGA, variable_values=variables, raise_errors=True)
         nodes = result.get('fetchSourceManga', {}).get('mangas', [])
         manga_models = [self.makeModel(node, 'Manga') for node in nodes]
         return [m for m in manga_models if m is not None]
 
     def makeFilter(self, node: dict) -> dict:
-        # Flattens the aliased `default` fields into one key. Filters stay plain
-        # dicts since they're a throwaway tree the dialog builds widgets from.
-        # Nodes with no type are kept (as type None) so every filter keeps its
-        # position: the server identifies filters by index.
         default = None
         for key in ("checkBoxDefault", "selectDefault", "triStateDefault", "textDefault", "sortDefault"):
             if key in node:
@@ -403,13 +368,8 @@ class Suwayomi(GObject.Object):
         nodes = (result.get('source') or {}).get('filters') or []
         return [self.makeFilter(node) for node in nodes]
 
-    # ---- extensions ----
 
     async def changeExtension(self, pkg_name: str, **patch):
-        # Shared by install/update/uninstall: mark the model busy, run the
-        # mutation, apply the returned extension, always clear the busy flag.
-        # UPDATE_EXTENSION takes install/update/uninstall as separate optional
-        # patch booleans, so the three wrapper methods below just pass one each.
         model = self.getModel(pkg_name, 'Extension')
         if model:
             model.is_busy = True
@@ -433,10 +393,6 @@ class Suwayomi(GObject.Object):
 
 
     def makePageModel(self, chapter_id: int, index: int, url: str) -> models.Page:
-        # Not kept in loaded_models: a Page holds a decoded texture, and keeping
-        # every page ever opened would grow memory without limit. The reader's
-        # store owns them, so they are freed when the chapter changes. Reopening
-        # a page is cheap because the bytes come from the disk cache.
         return models.Page(
             index=index,
             chapter_id=chapter_id,
@@ -444,8 +400,6 @@ class Suwayomi(GObject.Object):
         )
 
     async def getChapterPages(self, chapter_id: int) -> list:
-        # One call returns every page URL. The images load later, one at a
-        # time, as the reader asks for them.
         result = await self.query(FETCH_CHAPTER_PAGES, variable_values={"chapterId": chapter_id})
         data = result.get('fetchChapterPages', {})
         urls = data.get('pages', [])
@@ -474,7 +428,6 @@ class Suwayomi(GObject.Object):
         is_bookmarked: bool | None = None,
         last_page_read: int | None = None,
     ):
-        # Only the fields passed are sent, so the server leaves the others alone.
         variables = {"id": chapter_id}
         if is_read is not None:
             variables["isRead"] = is_read
@@ -483,10 +436,6 @@ class Suwayomi(GObject.Object):
         if last_page_read is not None:
             variables["lastPageRead"] = last_page_read
 
-        # Applied to the local model right away - a caller shouldn't have to
-        # wait on the round trip (or worry it fails to come back with every
-        # field) for something bound to the model, like a Start/Continue
-        # button, to react.
         model = self.getModel(chapter_id, 'Chapter')
         if model:
             model.update_data(**{
@@ -515,7 +464,6 @@ class Suwayomi(GObject.Object):
 
         result = await self.query(DELETE_DOWNLOADED_CHAPTER, variable_values={"id": chapter_id})
         chapters = result.get('deleteDownloadedChapter', {}).get('chapters') or []
-        # The single-chapter mutation may return one chapter instead of a list
         if isinstance(chapters, dict):
             chapters = [chapters]
 
@@ -542,8 +490,6 @@ class Suwayomi(GObject.Object):
         node = result.get('updateManga', {}).get('manga')
         if node is None or model is None:
             return
-        # SET_MANGA_LIBRARY also returns unreadCount, same as UPDATE_CHAPTER's
-        # manga node - apply it too instead of only the library fields.
         model.update_data(
             in_library=node.get('inLibrary', in_library),
             in_library_at=node.get('inLibraryAt', ''),
@@ -557,10 +503,8 @@ class Suwayomi(GObject.Object):
     async def removeFromLibrary(self, manga_id: int):
         await self.setMangaLibrary(manga_id, False)
 
-    # ---- downloads ----
 
     def makeDownloadModel(self, item: dict) -> models.Download | None:
-        # A download has no id of its own, it's identified by its chapter.
         chapter = item.get('chapter') or {}
         manga = item.get('manga') or {}
         chapter_id = chapter.get('id')
@@ -593,8 +537,6 @@ class Suwayomi(GObject.Object):
         new_models = [self.makeDownloadModel(item) for item in items]
         new_models = [m for m in new_models if m is not None]
 
-        # Models update in place, so progress reaches the rows through
-        # notifications. Only touch the store when the queue itself changed.
         current_ids = [m.chapter_id for m in self.download_queue]
         new_ids = [m.chapter_id for m in new_models]
         if current_ids != new_ids:
@@ -622,14 +564,12 @@ class Suwayomi(GObject.Object):
     async def stopDownloader(self):
         await self.downloadCommand(STOP_DOWNLOADER)
 
-    # ---- settings ----
 
     async def getReaderSettings(self, manga_id: int) -> dict:
         result = await self.query(GET_READER_META, variable_values={"id": manga_id})
         global_meta = (result.get('metas') or {}).get('nodes') or []
         manga_meta = (result.get('manga') or {}).get('meta') or []
 
-        # Later entries win: global defaults first, then the manga's own overrides.
         values = {m['key']: m['value'] for m in global_meta}
         values.update({m['key']: m['value'] for m in manga_meta})
 
@@ -686,7 +626,6 @@ class Suwayomi(GObject.Object):
         return settings
 
     async def setGlobalReadingMode(self, mode: str, orientation: str):
-        # Mode and orientation share one server key, same encoding as setReaderSettings.
         value = GLOBAL_MODE_VALUES.get(mode)
         if value is None:  # webtoon
             value = 3 if orientation == "horizontal" else 4

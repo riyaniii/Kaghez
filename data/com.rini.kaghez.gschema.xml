@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="kaghez">
 	<schema id="com.rini.kaghez" path="/com/rini/kaghez/">
-
+		<key name="suwayomi-url" type="s">
+			<default>''</default>
+			<summary>Suwayomi server URL</summary>
+			<description>The URL of the Suwayomi server Kaghez connects to.</description>
+		</key>
 	</schema>
 </schemalist>

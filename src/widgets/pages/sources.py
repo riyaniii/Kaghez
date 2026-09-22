@@ -47,7 +47,6 @@ class SourcesPage(Adw.NavigationPage):
             card.icon_task = None
 
         item = list_item.get_item()
-        # So that the paintable no longer takes up memory within loaded_models within Suwayomi
         item.paintable = None
 
         card.model = None
@@ -63,7 +62,6 @@ class SourcesPage(Adw.NavigationPage):
 
     @Gtk.Template.Callback()
     def on_header_bind(self, factory, header):
-        # The header's item is the first item of its section.
         lang = header.get_item().lang
         if lang == "all":
             title = "All languages"

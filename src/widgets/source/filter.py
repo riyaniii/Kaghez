@@ -50,9 +50,6 @@ class SourceFilter(Adw.Dialog):
             self.filter_stack.set_visible_child_name("empty")
             return
 
-        # Headers and separators only start a new section, so a group's model
-        # is flushed (and bound) as soon as one of those ends it, the same
-        # place the old widget-building loop started a new PreferencesGroup.
         title = None
         pending = []
 
@@ -62,9 +59,6 @@ class SourceFilter(Adw.Dialog):
                 store = Gio.ListStore.new(item_type=FilterEntry)
                 store.splice(0, 0, pending)
                 group = Adw.PreferencesGroup(title=title or "")
-                # Rows are built by GTK's own bind_model machinery as each
-                # entry enters the group, instead of us looping and calling
-                # group.add() by hand for every row up front.
                 group.bind_model(store, self.create_row)
                 self.filter_page.add(group)
                 self.groups.append(group)
@@ -144,16 +138,12 @@ class SourceFilter(Adw.Dialog):
         self.update_tri_button(path)
         button.connect("toggled", self.on_tri_toggled, path)
 
-        # Activating the row clicks the check button, so the whole row is a target.
         row = Adw.ActionRow(title=item.node["name"])
         row.add_prefix(button)
         row.set_activatable_widget(button)
         return row
 
     def make_group_row(self, item):
-        # AdwExpanderRow has no bind_model of its own (it's just add_row()),
-        # so its children stay manually built - but only once, the first
-        # time the row is actually expanded, not while it's still collapsed.
         expander = Adw.ExpanderRow(title=item.node["name"])
         populated = False
 
@@ -178,10 +168,6 @@ class SourceFilter(Adw.Dialog):
                 expander.add_row(header)
                 continue
             if child["type"] == "GroupFilter":
-                # A sub-group is flattened into this same expander instead of
-                # becoming a nested AdwExpanderRow: nested expander rows draw
-                # their arrow icon wrong, so a header row plus its own
-                # children stands in for the nested expander.
                 header = Adw.ActionRow(title=child["name"])
                 header.add_css_class("dimmed")
                 expander.add_row(header)
@@ -196,8 +182,6 @@ class SourceFilter(Adw.Dialog):
         self.set_change(path, {"checkBoxState": row.get_active()})
 
     def on_tri_toggled(self, button, path):
-        # A click always flips `active`, so the next state comes from the
-        # tracked one instead of from what the button now says.
         if self.updating:
             return
         current = TRI_STATES.index(self.tri_states[path])
@@ -209,7 +193,6 @@ class SourceFilter(Adw.Dialog):
     def update_tri_button(self, path):
         button = self.tri_buttons[path]
         state = self.tri_states[path]
-        # Setting the button re-emits `toggled`, so mute our own handler.
         self.updating = True
         button.set_inconsistent(state == "EXCLUDE")
         button.set_active(state == "INCLUDE")
@@ -242,8 +225,6 @@ class SourceFilter(Adw.Dialog):
         self.set_change(path, {"sortState": {"index": index, "ascending": button.get_active()}})
 
     def make_change(self, path, change):
-        # A change deep in a group is wrapped once per level: the outer entry
-        # points at the group's position and carries the inner one.
         node = {"position": path[-1], **change}
         for position in reversed(path[:-1]):
             node = {"position": position, "groupChange": node}

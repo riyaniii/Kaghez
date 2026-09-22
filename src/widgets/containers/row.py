@@ -56,7 +56,6 @@ class MangaRow(Gtk.Box):
             card.thumbnail_task = None
 
         item = list_item.get_item()
-        # So that the paintable no longer takes up memory within loaded_models within Suwayomi
         item.paintable = None
 
         card.model = None

@@ -4,13 +4,10 @@ import math
 
 from gi.repository import Gtk, Adw, Gio, Gsk, Graphene, GObject
 
-# Width / height assumed for a page until it loads: a typical portrait page.
 DEFAULT_RATIO = 0.68
 ZOOM_MIN = 0.5
 ZOOM_MAX = 4.0
-# Share of the viewport, on each side, that is kept realized off screen.
 PRELOAD = 0.5
-# Unused panels kept for reuse instead of being destroyed.
 POOL_MAX = 6
 
 class Panel(Gtk.Stack):
@@ -58,7 +55,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
 
     @GObject.Signal(arg_types=(int,))
     def page_changed(self, index):
-        # Emitted when a different page is in the middle of the viewport.
         pass
 
     def __init__(self, **kwargs):
@@ -66,8 +62,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
         self.suwayomi = Gio.Application.get_default().suwayomi
         self.store = None
 
-        # One entry per page, in store order. The ratio (width / height) is
-        # kept while the image is unloaded, so the layout stays put.
         self.ratios = []
         self.starts = []   # where each page starts along the scroll axis
         self.sizes = []    # how long each page is along the scroll axis
@@ -92,15 +86,12 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
         self.current_index = -1
         self.pending_index = None
 
-        # Capture phase, so the pinch is claimed before the ScrolledWindow's
-        # own touch panning sees the two fingers and fights the zoom.
         zoom_gesture = Gtk.GestureZoom()
         zoom_gesture.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
         zoom_gesture.connect("begin", self.on_zoom_begin)
         zoom_gesture.connect("scale-changed", self.on_zoom_scale_changed)
         self.add_controller(zoom_gesture)
 
-        # Any button, so touch counts too.
         double_tap = Gtk.GestureClick()
         double_tap.set_button(0)
         double_tap.connect("pressed", self.on_double_tap)
@@ -115,7 +106,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
             child.unparent()
         super().do_dispose()
 
-    # direction
 
     @GObject.Property(type=Gtk.TextDirection, default=Gtk.TextDirection.LTR)
     def direction(self):
@@ -123,8 +113,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
 
     @direction.setter
     def direction(self, value):
-        # Flipping changes where the strip starts, so keep the reader at the
-        # same place counted from the start.
         left = self.scroll_value(self.hadj) if self.hadj else 0
         self.set_direction(value)
         if self.hadj:
@@ -137,10 +125,8 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
 
     @property
     def mirrored(self):
-        # Only a horizontal strip flips for right-to-left reading.
         return not self.vertical and self.get_direction() == Gtk.TextDirection.RTL
 
-    # axes
 
     @property
     def main_adjustment(self):
@@ -155,8 +141,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
         return self.extent if self.vertical else self.cross
 
     def scroll_value(self, adjustment):
-        # Scroll position counted from where the strip starts. A mirrored
-        # strip starts at the right, so its horizontal value counts from there.
         value = adjustment.get_value()
         if adjustment is self.hadj and self.mirrored:
             return adjustment.get_upper() - adjustment.get_page_size() - value
@@ -167,15 +151,12 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
             value = adjustment.get_upper() - adjustment.get_page_size() - value
         adjustment.set_value(value)
 
-    # pages
 
     def bind_store(self, store: Gio.ListStore):
         self.store = store
         store.connect("items-changed", self.on_items_changed)
 
     def on_items_changed(self, store, position, removed, added):
-        # The reader swaps all the pages at once when the chapter changes, so
-        # start over: new ratios, new layout, back to the start.
         for index in list(self.realized):
             self.unrealize_panel(index)
         self.ratios = [DEFAULT_RATIO] * store.get_n_items()
@@ -187,7 +168,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
         self.queue_allocate()
 
     def scroll_to_index(self, index: int):
-        # Nothing is laid out before the first allocation, so wait for it.
         if self.cross == 0:
             self.pending_index = index
             return
@@ -198,14 +178,12 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
     def on_orientation_changed(self, *_):
         if self.cross == 0:  # nothing is laid out yet
             return
-        # Lay out again along the other axis, from the current page.
         self.pending_index = self.current_index
         self.cross = 0
         self.set_scroll_value(self.hadj, 0)
         self.set_scroll_value(self.vadj, 0)
         self.queue_allocate()
 
-    # layout
 
     def relayout(self):
         self.starts = []
@@ -228,8 +206,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
         self.relayout()
         self.configure_adjustments()
 
-        # A page above the viewport changing size would push what the reader
-        # is looking at, so scroll by the same amount.
         adjustment = self.main_adjustment
         value = self.scroll_value(adjustment)
         if start + old_size <= value / self.zoom:
@@ -260,7 +236,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
             self.current_index = index
             self.emit("page-changed", index)
 
-    # panels
 
     def update_realized(self):
         first, last = self.visible_range()
@@ -299,7 +274,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
         if task := self.tasks.pop(index, None):
             task.cancel()
 
-        # Frees the decoded image. Scrolling back loads it from the disk cache.
         panel.page.paintable = None
         panel.page = None
         panel.set_paintable(None)
@@ -322,7 +296,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
             self.show_paintable(index, paintable)
 
     def show_paintable(self, index, paintable):
-        # Only now is the real shape of the page known.
         self.realized[index].set_paintable(paintable)
         self.set_ratio(index, paintable.get_intrinsic_aspect_ratio() or DEFAULT_RATIO)
 
@@ -330,7 +303,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
         left = self.scroll_value(self.hadj) / self.zoom
         top = self.scroll_value(self.vadj) / self.zoom
 
-        # Content smaller than the viewport (zoomed out) is centered.
         offset_x = self.centering_offset(self.content_width, self.zoom, width)
         offset_y = self.centering_offset(self.content_height, self.zoom, height)
 
@@ -347,18 +319,13 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
                 x = width / self.zoom - x - panel_width
 
             transform = Gsk.Transform.new().translate(Graphene.Point().init(x, y))
-            # Rounded up, so neighbours overlap instead of leaving a seam.
             panel.allocate(math.ceil(panel_width), math.ceil(panel_height), -1, transform)
 
-    # zoom
 
     def centering_offset(self, content_size, zoom, viewport_size):
-        # Offset that centers content smaller than the viewport, 0 otherwise.
         return max(0.0, (viewport_size / zoom - content_size) / 2)
 
     def anchored_scroll(self, adjustment, content_size, viewport_size, anchor, old_zoom, new_zoom):
-        # Scroll value that keeps the content under `anchor` (a viewport
-        # coordinate) in place when the zoom changes.
         old_offset = self.centering_offset(content_size, old_zoom, viewport_size)
         new_offset = self.centering_offset(content_size, new_zoom, viewport_size)
         point = (self.scroll_value(adjustment) - old_offset * old_zoom + anchor) / old_zoom
@@ -370,7 +337,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
         if abs(new_zoom - old_zoom) < 1e-6:
             return
 
-        # A mirrored strip is the normal one flipped, so flip the anchor too.
         if self.mirrored:
             anchor_x = self.get_width() - anchor_x
 
@@ -402,7 +368,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
         if n_press == 2:
             self.set_zoom_anchored(1.0, x, y)
 
-    # scrolling
 
     def scroll_fractions(self):
         return (
@@ -424,7 +389,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
     def on_scrolled(self, *_):
         self.queue_allocate()
 
-    # Gtk.Widget
 
     def do_measure(self, orientation, for_size):
         return 0, 0, -1, -1
@@ -437,7 +401,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
     def do_size_allocate(self, width, height, baseline):
         cross = width if self.vertical else height
         if cross != self.cross:
-            # Keep the reader at the same relative place through the relayout.
             fractions = self.scroll_fractions()
             self.cross = cross
             self.relayout()
@@ -451,7 +414,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
         self.update_realized()
         self.place_panels(width, height)
 
-    # Gtk.Scrollable
 
     @GObject.Property(type=Gtk.Adjustment, default=None)
     def hadjustment(self):
@@ -505,7 +467,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
         if adjustment is None:
             return
         upper = max(content_size * self.zoom, viewport_size)
-        # configure() emits signals, so skip it when nothing changed.
         if (
             abs(adjustment.get_upper() - upper) < 0.01
             and abs(adjustment.get_page_size() - viewport_size) < 0.01
@@ -513,7 +474,6 @@ class Canvas(Gtk.Widget, Gtk.Scrollable):
             return
         value = adjustment.get_value()
         if flipped:
-            # Keep the same distance from the start of the strip.
             old_end = adjustment.get_upper() - adjustment.get_page_size()
             value = upper - viewport_size - (old_end - value)
         adjustment.configure(value, 0.0, upper, 40.0, viewport_size * 0.9, viewport_size)

@@ -9,7 +9,6 @@ from .single import SinglePageReader
 from .webtoon import WebtoonReader
 from .double import DoublePageReader
 
-# load_chapter clamps the resume position to the real last page.
 LAST_PAGE = 10**6
 
 
@@ -57,9 +56,6 @@ class ReaderPage(Adw.NavigationPage):
             )
             self.bind_property(
                 "chapter_model", reader, "chapter_model",
-                # Bidirectional: the webtoon reader updates this itself as it
-                # scrolls past a chapter boundary, and that has to reach the
-                # header title and progress tracking here.
                 GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
             )
             self.bind_property(
@@ -82,7 +78,6 @@ class ReaderPage(Adw.NavigationPage):
 
         self.connect("notify::position", self.on_position_notify)
 
-        #Actions
         action_group = Gio.SimpleActionGroup()
 
         next_action = Gio.SimpleAction.new("next_page", None)
@@ -103,7 +98,6 @@ class ReaderPage(Adw.NavigationPage):
 
         self.insert_action_group("reader", action_group)
 
-        #Keyboard Inputs
 
         key_controller = Gtk.EventControllerKey()
         key_controller.connect("key-pressed", self.on_key_pressed)
@@ -114,7 +108,6 @@ class ReaderPage(Adw.NavigationPage):
         self.connect("notify::direction", self.on_setting_changed)
         self.readers["webtoon"].connect("notify::orientation", self.on_setting_changed)
 
-        # Loads are cancelled when the page goes away (see on_unrealize).
         self.settings_task = asyncio.create_task(self.load_settings())
         self.connect("unrealize", self.on_unrealize)
 
@@ -137,8 +130,6 @@ class ReaderPage(Adw.NavigationPage):
         return None
 
     def start_load(self, chapter_model, resume_position=0) -> asyncio.Task:
-        # Only one load may run at a time: a cancelled one can't reach the
-        # splice, so the pages always belong to the current chapter_model.
         if self.load_task is not None and not self.load_task.done():
             self.load_task.cancel()
         self.load_task = asyncio.create_task(
@@ -165,8 +156,6 @@ class ReaderPage(Adw.NavigationPage):
             await self.start_load(chapter, self.initial_resume_position(chapter))
 
     def change_chapter(self, direction: int, resume_position: int | None = None):
-        # Ignore requests while a chapter is still loading, so holding a key at
-        # the edge doesn't skip through several chapters.
         if self.load_task is not None and not self.load_task.done():
             return
         chapter = self.get_adjacent_chapter(direction)
@@ -177,13 +166,9 @@ class ReaderPage(Adw.NavigationPage):
         self.start_load(chapter, resume_position)
 
     def on_chapter_requested(self, reader, direction):
-        # Going back from the first page lands on the last page of the previous
-        # chapter. Going forward resumes normally.
         self.change_chapter(direction, LAST_PAGE if direction < 0 else None)
 
     def on_unrealize(self, *_):
-        # Loading has nothing left to show. save_progress and flush_settings
-        # are left running on purpose so the last page and setting still land.
         for task in (self.load_task, self.settings_task):
             if task is not None:
                 task.cancel()  # no-op if already finished
@@ -239,8 +224,6 @@ class ReaderPage(Adw.NavigationPage):
         total = self.chapter_model.page_count
         if total <= 0:  # page count not loaded yet, don't mark the chapter read
             return
-        # The double reader's position is the earlier page of a spread, and
-        # the spread also shows the page after it.
         seen = self.position + 1
         if self.stack.get_visible_child_name() == "double":
             seen += 1
@@ -262,8 +245,6 @@ class ReaderPage(Adw.NavigationPage):
         self.apply_settings(settings)
 
     def apply_settings(self, settings):
-        # The notify handlers run synchronously inside these sets, so the flag
-        # stops them from writing the just-fetched values back to the server.
         self.applying_settings = True
         try:
             if settings.get("mode") in self.readers:
@@ -292,7 +273,6 @@ class ReaderPage(Adw.NavigationPage):
     def on_setting_changed(self, *_):
         if self.applying_settings:
             return
-        # Debounce: flipping through options shouldn't send a request per click.
         if self.save_settings_id:
             GLib.source_remove(self.save_settings_id)
         self.save_settings_id = GLib.timeout_add(500, self.flush_settings)

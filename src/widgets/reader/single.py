@@ -50,7 +50,6 @@ class SinglePageReader(ReaderBase):
         else:
             self.position -= 1
 
-    # ---- internal ----
 
     def show_current(self):
         if self.paintable_task:

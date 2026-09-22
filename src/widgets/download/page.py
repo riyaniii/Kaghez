@@ -21,8 +21,6 @@ class DownloadsPage(Adw.NavigationPage):
         self.filter = Gtk.CustomFilter.new(self.filter_download)
         self.filtered = Gtk.FilterListModel.new(self.suwayomi.download_queue, self.filter)
 
-        # One section per manga. Sections are ordered by where the manga first
-        # appears in the queue, so the one downloading now stays on top.
         self.manga_rank = {}
         self.update_manga_rank()
         self.section_sorter = Gtk.CustomSorter.new(self.compare_manga)
@@ -55,7 +53,6 @@ class DownloadsPage(Adw.NavigationPage):
         return GLib.SOURCE_CONTINUE
 
     async def refresh(self):
-        # Skip a tick if the previous request is still in flight.
         if self.refreshing:
             return
         self.refreshing = True
@@ -99,7 +96,6 @@ class DownloadsPage(Adw.NavigationPage):
             self.manga_rank.setdefault(download.manga_id, len(self.manga_rank))
 
     def compare_manga(self, a, b, *_):
-        # Items of one manga compare equal, which is what makes them a section.
         rank_a = self.manga_rank.get(a.manga_id, len(self.manga_rank))
         rank_b = self.manga_rank.get(b.manga_id, len(self.manga_rank))
         return (rank_a > rank_b) - (rank_a < rank_b)
@@ -112,7 +108,6 @@ class DownloadsPage(Adw.NavigationPage):
         label.set_margin_top(12)
         label.set_margin_bottom(6)
         header.set_child(label)
-        # The section's first item can change (reordering) without a re-bind.
         header.connect("notify::item", lambda h, _: self.update_header(h))
 
     def on_header_bind(self, factory, header):
@@ -140,8 +135,6 @@ class DownloadsPage(Adw.NavigationPage):
             self.toggle_button.set_tooltip_text("Start downloads")
 
     def on_reorder_requested(self, row, dragged_chapter_id, target_chapter_id):
-        # The list may be filtered, so the target index comes from the real
-        # queue store, which is what the server's `to` refers to.
         for index, download in enumerate(self.suwayomi.download_queue):
             if download.chapter_id == target_chapter_id:
                 asyncio.create_task(
@@ -156,7 +149,6 @@ class DownloadsPage(Adw.NavigationPage):
         asyncio.create_task(self.retry(chapter_id))
 
     async def retry(self, chapter_id):
-        # Dequeue first so the server starts the chapter over with fresh tries.
         await self.suwayomi.dequeueChapterDownload(chapter_id)
         await self.suwayomi.enqueueChapterDownload(chapter_id)
 

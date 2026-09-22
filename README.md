@@ -23,6 +23,9 @@ You can install Kaghez as flatpak
 
 You need to run [Suwayomi](https://github.com/Suwayomi/Suwayomi-Server) and pass it's URL when the app starts.
 
+<img width="225" height="275" alt="image" src="https://github.com/user-attachments/assets/6f7dfef2-28de-46d2-a401-76d86655bd68" />
+
+
 ## Screenshots
 
 <table>

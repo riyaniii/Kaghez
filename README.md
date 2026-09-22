@@ -12,7 +12,8 @@ It requires a running [Suwayomi Server](https://github.com/Suwayomi/Suwayomi-Ser
 - Built-in reader with single-page, double-page, and webtoon (continuous scroll) modes
 - Natural touchpad gesture navigation (Pinch to zoom/Pan to move)
 
-
+### Installation
+You can install Kaghez as flatpak
 <p>
   <a href="https://github.com/riyaniii/Kaghez/releases">
     <img src="https://img.shields.io/badge/⬇%20Download%20Kaghez-GitHub%20Releases-181717?style=for-the-badge&logo=github&logoColor=white" height="60">
@@ -53,4 +54,3 @@ It requires a running [Suwayomi Server](https://github.com/Suwayomi/Suwayomi-Ser
       <strong>Downloads</strong>
     </td>
   </tr>
-</table>

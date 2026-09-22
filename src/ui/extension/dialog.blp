@@ -1,0 +1,61 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $KaghezExtensionDialog : Adw.Dialog {
+  title: bind template.model as <$KaghezExtension> .name;
+  can-close: true;
+  content-width: 300;
+  content-height: 300;
+
+  child: Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {
+
+    }
+
+    content: Gtk.Box {
+      orientation: vertical;
+      spacing: 12;
+
+      Gtk.Image {
+        paintable: bind template.model as <$KaghezExtension> .paintable;
+        pixel-size: 150;
+      }
+
+      Gtk.Label {
+        styles [
+          "title-4"
+        ]
+        label: bind template.model as <$KaghezExtension> .name;
+      }
+
+      Gtk.Box {
+        orientation: horizontal;
+        spacing: 12;
+        halign: center;
+
+        Gtk.Label version {
+          styles [
+          "heading",
+          "dimmed"
+          ]
+          label: bind template.model as <$KaghezExtension> .version_name;
+        }
+
+        Gtk.Label language {
+          styles [
+          "heading"
+          ]
+          label: bind template.model as <$KaghezExtension> .lang;
+        }
+
+        Gtk.Label age_rating {
+          styles [
+          "heading"
+          ]
+          label: bind $get_age_rating(template.model as <$KaghezExtension> .is_nsfw) as <string>;
+        }
+      }
+    };
+  };
+}

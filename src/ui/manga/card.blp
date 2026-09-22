@@ -1,0 +1,32 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $KaghezMangaCard : Gtk.Box {
+  orientation: vertical;
+  spacing: 6;
+  margin-start: 6;
+  margin-end: 6;
+  margin-top: 6;
+  margin-bottom: 6;
+
+
+  Gtk.Picture poster {
+    styles [
+      "rounded"
+    ]
+    paintable: bind template.model as <$KaghezManga> .paintable;
+    content-fit: cover;
+    vexpand: true;
+  }
+
+
+  Gtk.Label title {
+    styles [
+      "heading"
+    ]
+    label: bind template.model as <$KaghezManga> .title;
+    xalign: 0.0;
+    ellipsize: end;
+    tooltip-text: bind template.model as <$KaghezManga> .title;
+  }
+}

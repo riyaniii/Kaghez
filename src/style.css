@@ -1,0 +1,79 @@
+.manga-grid {
+  background: none;
+  color: inherit;
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+.manga-grid > child {
+  margin: 3px;
+}
+
+.inherit-color {
+  background: none;
+  color: inherit;
+}
+
+
+.little-bold {
+  font-weight: 550;
+}
+
+.rounded {
+  border-radius: 9px;
+}
+
+.genres > button {
+  border-radius: 25px;
+}
+
+.overview-genres > button {
+  border-radius: 25px;
+  font-size: 14px;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+.manga-row > row {
+  border-radius: 9px;
+}
+
+.reader-header {
+  background-image: linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0));
+}
+
+.reader-osd {
+    color: white;
+    text-shadow:
+      0px 0px 3px rgba(0, 0, 0, 0.5),
+      0px 0px 7px rgba(0, 0, 0, 0.4),
+      0px 0px 10px rgba(0, 0, 0, 0.3);
+    -gtk-icon-shadow:
+      0px 0px 3px rgba(0, 0, 0, 0.5),
+      0px 0px 7px rgba(0, 0, 0, 0.4),
+      0px 0px 10px rgba(0, 0, 0, 0.3);
+}
+
+popover {
+  text-shadow: none;
+}
+
+.row-overlay-right {
+  margin-right: -1px;
+  background: linear-gradient(to left,
+    var(--window-bg-color) 0%,
+    transparent 100%
+  );
+}
+
+.row-overlay-left {
+  margin-left: -1px;
+  background: linear-gradient(to right,
+    var(--window-bg-color) 0%,
+    transparent 100%
+  );
+}
+
+

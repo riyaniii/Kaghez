@@ -1,0 +1,64 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $KaghezMangaOverview : Gtk.Box {
+  orientation: horizontal;
+  spacing: 12;
+
+  Gtk.GestureClick {
+    released => $on_overview_clicked();
+  }
+
+  Gtk.Picture poster {
+    styles [
+      "rounded"
+    ]
+
+    paintable: bind template.model as <$KaghezManga> .paintable;
+    content-fit: cover;
+    valign: start;
+    hexpand: true;
+    vexpand: true;
+    width-request: 150;
+  }
+
+
+  Gtk.Box right {
+    orientation: vertical;
+    spacing: 12;
+
+    Gtk.Label title {
+      styles [
+        "title-2"
+      ]
+      label: bind template.model as <$KaghezManga> .title;
+      selectable: true;
+      xalign: 0.0;
+      wrap: true;
+      wrap-mode: char;
+      lines: 2;
+      ellipsize: end;
+    }
+
+    Adw.WrapBox genres {
+      styles [
+      "overview-genres"
+      ]
+      line-spacing: 6;
+      child-spacing: 6;
+    }
+
+    Gtk.Label description {
+      styles [
+        "body",
+      ]
+      label: bind $get_shortened_description(template.model as <$KaghezManga> .description) as <string>;
+      selectable: true;
+      xalign: 0.0;
+      wrap: true;
+      wrap-mode: word_char;
+      lines: 5;
+      ellipsize: end;
+    }
+  }
+}

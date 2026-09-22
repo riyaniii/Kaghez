@@ -1,0 +1,67 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $KaghezPreferencesDialog : Adw.PreferencesDialog {
+  Adw.PreferencesPage {
+    title: _("General");
+    icon-name: "preferences-system-symbolic";
+
+    Adw.PreferencesGroup {
+      title: _("Reading");
+      description: _("This sets the global reader settings");
+
+      Adw.InlineViewSwitcher {
+        margin-top: 12;
+        stack: bind template.mode_stack;
+        margin-bottom: 12;
+        sensitive: bind template.loaded;
+      }
+
+      Adw.ComboRow orientation_row {
+        title: _("Webtoon Orientation");
+        model: Gtk.StringList {
+          strings [_("Vertical"), _("Horizontal")]
+        };
+        notify::selected => $on_orientation_changed();
+      }
+
+      Adw.ComboRow direction_row {
+        title: _("Reading Direction");
+        model: Gtk.StringList {
+          strings [_("Left to Right"), _("Right to Left")]
+        };
+        sensitive: bind template.loaded;
+        notify::selected => $on_direction_changed();
+      }
+
+    }
+
+    Adw.PreferencesGroup {
+      title: _("Downloads");
+
+      Adw.SwitchRow cbz_row {
+        title: _("Save as CBZ Archive");
+        subtitle: _("Compress each downloaded chapter into a single CBZ file");
+        sensitive: bind template.loaded;
+        notify::active => $on_cbz_toggled();
+      }
+    }
+
+    Adw.PreferencesGroup {
+      title: _("Extensions");
+
+      Adw.ActionRow {
+        title: _("Extension Stores");
+        subtitle: _("Where extensions can be installed from");
+        activatable: true;
+        sensitive: bind template.loaded;
+        activated => $on_stores_activated();
+
+        [suffix]
+        Gtk.Image {
+          icon-name: "go-next-symbolic";
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+using Gtk 4.0;
+using Adw 1;
+
+Adw.ShortcutsDialog shortcuts_dialog {
+  Adw.ShortcutsSection {
+    title: _("General");
+
+    Adw.ShortcutsItem {
+      title: _("Open Search");
+      action-name: "app.open_search_page";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Open Library");
+      action-name: "app.open_library_page";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Open Downloads");
+      action-name: "app.open_downloads_page";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("Reader");
+
+    Adw.ShortcutsItem {
+      title: _("Next Page");
+      accelerator: "Back";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Previous Page");
+      accelerator: "Forward";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Open Chapter Panel");
+      accelerator: "<Control>S";
+    }
+
+  }
+}

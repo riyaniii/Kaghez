@@ -1,0 +1,55 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $KaghezReaderPage : Adw.NavigationPage {
+  title: bind template.manga_model as <$KaghezManga> .title;
+
+  can-pop: false;
+
+  child: Adw.ToolbarView {
+    extend-content-to-top-edge: true;
+
+    [top]
+    Adw.BreakpointBin {
+      child: Adw.HeaderBar {
+        styles [
+          "reader-header",
+          "reader-osd"
+        ]
+        centering-policy: strict;
+
+        [start]
+        Gtk.Button {
+          icon-name: "go-previous-symbolic";
+          clicked => $on_back_clicked();
+        }
+
+        [start]
+        Gtk.Label {
+          styles ["little-bold"]
+          label: bind template.chapter_model as <$KaghezChapter> .name;
+          ellipsize: middle;
+        }
+
+        [end]
+        Gtk.Box {
+          orientation: horizontal;
+
+          Gtk.Button {
+            icon-name: "sliders-horizontal-symbolic";
+            clicked => $on_settings_clicked();
+          }
+
+          Gtk.Button {
+            icon-name: "panel-right-symbolic";
+            action-name: "app.toggle_chapter_panel";
+          }
+        }
+      };
+    }
+
+    content: Adw.ViewStack stack {
+      enable-transitions: true;
+    };
+  };
+}

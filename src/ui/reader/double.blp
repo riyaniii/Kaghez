@@ -1,0 +1,24 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $KaghezDoublePageReader : $KaghezReaderBase {
+  child: Gtk.Box {
+    orientation: horizontal;
+    homogeneous: true;
+    halign: center;
+
+    Gtk.Picture right_picture {
+      content-fit: contain;
+      hexpand: true;
+      halign: end;
+      valign: center;
+    }
+
+    Gtk.Picture left_picture {
+      content-fit: contain;
+      hexpand: true;
+      halign: start;
+      valign: center;
+    }
+  };
+}

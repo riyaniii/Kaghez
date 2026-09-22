@@ -1,0 +1,88 @@
+#!@PYTHON@
+
+# kaghez.in
+#
+# Copyright 2026 riyani
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import os
+import sys
+import signal
+import locale
+import gettext
+
+VERSION = '@VERSION@'
+
+# meson bakes pkgdatadir/localedir in as absolute paths from the BUILD
+# machine (e.g. D:/a/Kaghez/Kaghez/dist/share/kaghez). That's fine for a
+# normal `meson install` deployment that stays put, but PyInstaller and
+# Inno Setup both relocate the installed tree onto the end user's
+# machine, where the build-time path doesn't exist. So on Windows we
+# recompute these relative to wherever the frozen exe actually landed.
+if getattr(sys, 'frozen', False):
+    # Running as a PyInstaller-frozen executable. PyInstaller 6.x puts
+    # bundled `datas` under an _internal/ folder next to the exe rather
+    # than flat alongside it -- confirmed via CI debug output showing
+    # the gresource lands at <exe_dir>/_internal/share/kaghez/.
+    exe_dir = os.path.dirname(sys.executable)
+    base_dir = os.path.join(exe_dir, '_internal')
+    pkgdatadir = os.path.join(base_dir, 'share', 'kaghez')
+    localedir = os.path.join(base_dir, 'share', 'locale')
+
+    # NOTE: previously set GI_TYPELIB_PATH manually here pointing at a
+    # copied girepository-1.0 folder. Removed to test whether
+    # PyInstaller's `gi` hook (hooksconfig in kaghez.spec) resolves
+    # typelibs on its own, the way it does in Varia's working build --
+    # Varia's workflow never sets this env var or copies typelibs
+    # manually. If "Namespace Gtk not available" comes back, this is
+    # the fix to reinstate:
+    #   os.environ['GI_TYPELIB_PATH'] = os.path.join(exe_dir, 'girepository-1.0')
+    # (and build.yml's DLL-bundling step needs the matching cp -r
+    # girepository-1.0 line added back too).
+else:
+    # Normal `meson install` deployment (Linux/Flatpak): trust the
+    # paths meson baked in at build time.
+    pkgdatadir = '@pkgdatadir@'
+    localedir = '@localedir@'
+
+sys.path.insert(1, pkgdatadir)
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+# locale.bindtextdomain/textdomain don't exist on Windows Python builds
+# (they're POSIX-only, backed by libintl on Linux/macOS), so guard them
+# the same way Varia does rather than crashing on startup.
+try:
+    locale.bindtextdomain('kaghez', localedir)
+    locale.textdomain('kaghez')
+except AttributeError:
+    print('Cannot set locale.')
+
+try:
+    gettext.bindtextdomain('kaghez', localedir)
+    gettext.textdomain('kaghez')
+except AttributeError:
+    print('Cannot load translations.')
+
+if __name__ == '__main__':
+    import gi
+
+    from gi.repository import Gio
+    resource = Gio.Resource.load(os.path.join(pkgdatadir, 'kaghez.gresource'))
+    resource._register()
+
+    from kaghez import main
+    sys.exit(main.main(VERSION))

@@ -1,0 +1,35 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $KaghezChapterPanel : Adw.NavigationPage {
+  title: _("Chapters");
+  child: Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {
+      show-title: true;
+    }
+
+    content: Gtk.Stack stack {
+      transition-type: crossfade;
+
+      Gtk.StackPage {
+        name: "empty";
+        child: Adw.StatusPage {
+          title: _(":(");
+          description: _("No Chapters");
+        };
+      }
+
+      Gtk.StackPage {
+        name: "list";
+        child: Gtk.ScrolledWindow {
+          hscrollbar-policy: never;
+          child: Gtk.ListView chapter_list {
+            single-click-activate: true;
+            width-request: 300;
+          };
+        };
+      }
+    };
+  };
+}

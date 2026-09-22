@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Kaghez
+Exec=kaghez
+Icon=com.rini.kaghez
+Terminal=false
+Type=Application
+Categories=Utility;
+Keywords=GTK;
+StartupNotify=true
+DBusActivatable=true

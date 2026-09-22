@@ -1,0 +1,184 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $KaghezSourcePage : Adw.NavigationPage {
+  child: Adw.BreakpointBin {
+    width-request: 10;
+    height-request: 10;
+    child: Adw.ToolbarView {
+      [top]
+      Adw.HeaderBar header_bar {
+        centering-policy: strict;
+        title-widget: Adw.ViewSwitcher {
+          policy: wide;
+          stack: source_stack;
+        };
+      }
+
+      [top]
+      Gtk.Box search_bar {
+        styles [
+          "linked"
+        ]
+        hexpand: true;
+        halign: fill;
+        margin-start: 50;
+        margin-end: 50;
+        margin-top: 3;
+        margin-bottom: 3;
+
+        visible: bind $is_search_page(source_stack.visible-child-name) as <bool>;
+
+        Gtk.SearchEntry search_entry {
+          hexpand: true;
+          placeholder-text: _("Find a comic");
+
+          search-delay: 500;
+        }
+
+        Gtk.Button filter_button {
+          icon-name: "sliders-horizontal-symbolic";
+          tooltip-text: _("Filters");
+          clicked => $on_filter_clicked();
+        }
+      }
+
+      [bottom]
+      Adw.ViewSwitcherBar switcher_bar {
+        stack: source_stack;
+      }
+
+      content: Adw.ViewStack source_stack {
+        Adw.ViewStackPage {
+          name: "popular";
+          icon-name: "starred-symbolic";
+          title: _("Popular");
+          child: Gtk.Stack popular_stack {
+            transition-type: crossfade;
+
+            Gtk.StackPage {
+              name: "loading";
+              child: Adw.Spinner popular_spinner {
+                halign: center;
+                valign: center;
+                width-request: 50;
+                height-request: 50;
+              };
+            }
+            Gtk.StackPage {
+              name: "results";
+              child: $KaghezMangaGrid popular_grid {};
+            }
+            Gtk.StackPage {
+              name: "empty";
+              child: Adw.StatusPage {
+                icon-name: "starred-symbolic";
+                title: _("No results");
+              };
+            }
+            Gtk.StackPage {
+              name: "error";
+              child: Adw.StatusPage popular_error {
+                icon-name: "dialog-error-symbolic";
+                title: _("Something went wrong");
+              };
+            }
+          };
+        }
+
+        Adw.ViewStackPage {
+          name: "latest";
+          icon-name: "sprout-symbolic";
+          title: _("Latest");
+          child: Gtk.Stack latest_stack {
+            transition-type: crossfade;
+
+            Gtk.StackPage {
+              name: "loading";
+              child: Adw.Spinner latest_spinner {
+                halign: center;
+                valign: center;
+                width-request: 50;
+                height-request: 50;
+              };
+            }
+            Gtk.StackPage {
+              name: "results";
+              child: $KaghezMangaGrid latest_grid {};
+            }
+            Gtk.StackPage {
+              name: "empty";
+              child: Adw.StatusPage {
+                icon-name: "sprout-symbolic";
+                title: _("No results");
+              };
+            }
+            Gtk.StackPage {
+              name: "error";
+              child: Adw.StatusPage latest_error {
+                icon-name: "dialog-error-symbolic";
+                title: _("Something went wrong");
+              };
+            }
+          };
+        }
+
+        Adw.ViewStackPage {
+          name: "search";
+          icon-name: "system-search-symbolic";
+          title: _("Search");
+          notify::visible-child-name => $on_page_changed();
+
+          child: Gtk.Stack search_stack {
+            transition-type: crossfade;
+
+
+            Gtk.StackPage {
+              name: "normal";
+              child: Adw.StatusPage {
+                icon-name: "system-search-symbolic";
+                title: _("Search");
+                description: _("Find mangas from this source, with advanced filters");
+              };
+            }
+
+            Gtk.StackPage {
+              name: "loading";
+              child: Adw.Spinner search_spinner {
+                halign: center;
+                valign: center;
+                width-request: 50;
+                height-request: 50;
+              };
+            }
+            Gtk.StackPage {
+              name: "results";
+              child: $KaghezMangaGrid search_grid {};
+            }
+            Gtk.StackPage {
+              name: "empty";
+              child: Adw.StatusPage {
+                icon-name: "system-search-symbolic";
+                title: _("No results");
+              };
+            }
+            Gtk.StackPage {
+              name: "error";
+              child: Adw.StatusPage search_error {
+                icon-name: "dialog-error-symbolic";
+                title: _("Something went wrong");
+              };
+            }
+          };
+        }
+      };
+    };
+    Adw.Breakpoint {
+      condition ("max-width: 480sp")
+      setters {
+        header_bar.title-widget: null;
+        switcher_bar.reveal: true;
+      }
+    }
+  };
+}

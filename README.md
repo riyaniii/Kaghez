@@ -11,7 +11,7 @@ It requires a running [Suwayomi Server](https://github.com/Suwayomi/Suwayomi-Ser
 - Browse and search comics from dozens of sources
 - Download chapters for offline reading
 - Built-in reader with single-page, double-page, and webtoon (continuous scroll) modes
-- Natural touchpad gesture navigation (Pinch to zoom/Pan to move)
+- Natural touchpad gesture navigation (Pinch to zoom/two-finger scroll to move)
 
 ### Installation
 You can install Kaghez as flatpak

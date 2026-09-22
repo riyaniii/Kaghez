@@ -69,7 +69,7 @@ class KaghezApplication(Adw.Application):
                                 developer_name='Riyan Parvez',
                                 version='0.8.7',
                                 translator_credits = _('translator-credits'),
-                                developers=['riyani'],
+                                developers=['Riyan Parvez (rini)'],
                                 copyright='© 2026 Riyan Parvez')
         about.present(self.props.active_window)
 

@@ -1,10 +1,11 @@
 [Desktop Entry]
 Name=Kaghez
+Comment=A manga reader
 Exec=kaghez
 Icon=com.rini.kaghez
 Terminal=false
 Type=Application
 Categories=Utility;
-Keywords=GTK;
+Keywords=Manga;Manhwa;Manhua;Comics;Comic;Reader;Suwayomi;Mihon;Tachiyomi;Komikku;
 StartupNotify=true
 DBusActivatable=true

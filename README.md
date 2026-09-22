@@ -3,7 +3,7 @@
 
 Kaghez allows you to discover, download and read comics with a beautiful looking UI, and natural touchpad gestures.
 
-It requires a running [Suwayomi Server](https://github.com/Suwayomi/Suwayomi-Server/).
+It requires a running [Suwayomi Server](https://github.com/Suwayomi/Suwayomi-Server#running-the-jar-release-directly).
 
 ## Features
 

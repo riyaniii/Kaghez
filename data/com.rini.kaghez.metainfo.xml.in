@@ -1,73 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
   <id>com.rini.kaghez</id>
+
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
 
   <name>Kaghez</name>
   <summary>Discover and read comics on your device</summary>
+
   <description>
-    <p>No description</p>
+    <p>
+      Kaghez allows you to discover, download and read comics with a beautiful
+      looking UI, and natural touchpad gestures. It requires a running
+      Suwayomi Server.
+    </p>
   </description>
 
-  <developer id="tld.vendor">
-    <name>Developer name</name>
+  <developer>
+    <name>Riyan Parvez</name>
   </developer>
 
-  <!-- Required: Should be a link to the upstream homepage for the component -->
   <url type="homepage">https://github.com/riyaniii/Kaghez</url>
-  <!-- Recommended: It is highly recommended for open-source projects to display the source code repository -->
   <url type="vcs-browser">https://github.com/riyaniii/Kaghez</url>
-  <!-- Should point to the software's bug tracking system, for users to report new bugs -->
   <url type="bugtracker">https://github.com/riyaniii/Kaghez/issues</url>
-  <!-- Should link a FAQ page for this software, to answer some of the most-asked questions in detail -->
-  <!-- URLs of this type should point to a webpage where users can submit or modify translations of the upstream project -->
-  <url type="translate">https://example.org/translate</url>
-  <url type="faq">https://example.org/faq</url>
-  <!-- Should provide a web link to an online user's reference, a software manual or help page -->
-  <url type="help">https://example.org/help</url>
-  <!-- URLs of this type should point to a webpage showing information on how to donate to the described software project -->
-  <url type="donation">https://example.org/donate</url>
-  <!-- This could for example be an HTTPS URL to an online form or a page describing how to contact the developer -->
   <url type="contact">https://github.com/riyaniii</url>
-  <!-- URLs of this type should point to a webpage showing information on how to contribute to the described software project -->
   <url type="contribute">https://github.com/riyaniii/Kaghez</url>
 
   <translation type="gettext">kaghez</translation>
-  <!-- All graphical applications having a desktop file must have this tag in the MetaInfo.
-     If this is present, appstreamcli compose will pull icons, keywords and categories from the desktop file. -->
-  <launchable type="desktop-id">com.rini.kaghez.desktop</launchable>
-  <!-- Use the OARS website (https://hughsie.github.io/oars/generate.html) to generate these and make sure to use oars-1.1 -->
-  <content_rating type="oars-1.1" />
 
-  <!-- Applications should set a brand color in both light and dark variants like so -->
+  <launchable type="desktop-id">com.rini.kaghez.desktop</launchable>
+
+  <content_rating type="oars-1.1"/>
+
   <branding>
-    <color type="primary" scheme_preference="light">#ff00ff</color>
-    <color type="primary" scheme_preference="dark">#993d3d</color>
+    <color type="primary" scheme_preference="light">#FFD700</color>
+    <color type="primary" scheme_preference="dark">#C7D0EC</color>
   </branding>
 
   <screenshots>
     <screenshot type="default">
-      <image>https://example.org/example1.png</image>
-      <caption>A caption</caption>
+      <image>https://github.com/user-attachments/assets/985faef7-77a9-4ede-b8e9-c1b8421c54b6</image>
+      <caption>Home</caption>
     </screenshot>
+
     <screenshot>
-      <image>https://example.org/example2.png</image>
-      <caption>A caption</caption>
+      <image>https://github.com/user-attachments/assets/b937ceb0-4049-4733-a778-b565908b44bf</image>
+      <caption>Search</caption>
+    </screenshot>
+
+    <screenshot>
+      <image>https://github.com/user-attachments/assets/11405fb5-f572-4c72-b442-2be75cbb2c40</image>
+      <caption>Reader</caption>
+    </screenshot>
+
+    <screenshot>
+      <image>https://github.com/user-attachments/assets/09768716-077c-4f63-80d3-a29f62b5d03b</image>
+      <caption>Comic Details</caption>
+    </screenshot>
+
+    <screenshot>
+      <image>https://github.com/user-attachments/assets/7fa8d539-2b09-499e-a7fc-f95684a4904d</image>
+      <caption>Downloads</caption>
     </screenshot>
   </screenshots>
 
   <releases>
-    <release version="1.0.1" date="2024-01-18">
-      <url type="details">https://example.org/changelog.html#version_1.0.1</url>
+    <release version="0.8.7" date="2026-09-22">
+      <url type="details">
+        https://github.com/riyaniii/Kaghez/releases/tag/v0.8.7
+      </url>
       <description translate="no">
-        <p>Release description</p>
-        <ul>
-          <li>List of changes</li>
-          <li>List of changes</li>
-        </ul>
+        <p>
+          Initial release of Kaghez.
+        </p>
       </description>
     </release>
   </releases>
-
 </component>

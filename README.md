@@ -1,8 +1,9 @@
 <p align="center"><img src="https://raw.githubusercontent.com/riyaniii/Kaghez/1a4a59ccb36fa2adab57c866f6e41623bd34de89/data/icons/hicolor/scalable/apps/com.rini.kaghez.svg">
 <h1 align="center">Kaghez</h1>
 
-<p>Kaghez allows you to discover, download and read comics with a beautiful looking UI, and natural touchpad gestures.
-It requires a running [Suwayomi Server](https://github.com/Suwayomi/Suwayomi-Server/).</p>
+Kaghez allows you to discover, download and read comics with a beautiful looking UI, and natural touchpad gestures.
+
+It requires a running [Suwayomi Server](https://github.com/Suwayomi/Suwayomi-Server/).
 
 ## Features
 

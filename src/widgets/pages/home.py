@@ -57,7 +57,7 @@ class HomePage(Adw.NavigationPage):
             return
 
         if mangas:
-            mangas = mangas[:12]
+            mangas = mangas[:8]
             row.set_items(mangas)
             row.set_visible(True)
             self.shown_rows += 1

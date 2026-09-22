@@ -41,7 +41,7 @@ READING_MODES = {
 GLOBAL_MODE_VALUES = {"single": 0, "double": 1}
 
 class Suwayomi(GObject.Object):
-    __gtype_name__ = 'NahrIntegrationSuwayomi'
+    __gtype_name__ = 'KaghezIntegrationSuwayomi'
 
     url = GObject.Property(type=str, default="http://localhost:4567")
     downloader_state = GObject.Property(type=str, default="STOPPED")

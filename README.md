@@ -20,6 +20,7 @@ You can install Kaghez as flatpak
     <img src="https://img.shields.io/badge/⬇%20Download%20Kaghez-GitHub%20Releases-181717?style=for-the-badge&logo=github&logoColor=white" height="60">
   </a>
 </p>
+You need to run [Suwayomi](https://github.com/Suwayomi/Suwayomi-Server) and pass it's URL when the app starts.
 
 ## Screenshots
 

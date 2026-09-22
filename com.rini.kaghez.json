@@ -1,5 +1,5 @@
 {
-    "id": "com.rini.kaghez.Devel",
+    "id": "com.rini.kaghez",
     "runtime": "org.gnome.Platform",
     "runtime-version": "50",
     "sdk": "org.gnome.Sdk",

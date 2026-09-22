@@ -23,7 +23,7 @@ class KaghezApplication(Adw.Application):
     suwayomi = GObject.Property(type=Suwayomi, default=Suwayomi())
 
     def __init__(self):
-        super().__init__(application_id='com.rini.kaghez.Devel',
+        super().__init__(application_id='com.rini.kaghez',
                          flags=Gio.ApplicationFlags.DEFAULT_FLAGS,
                          resource_base_path='/com/rini/kaghez')
         self.create_action('quit', lambda *_: self.quit(), ['<control>q'])

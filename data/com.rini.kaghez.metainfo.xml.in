@@ -64,13 +64,13 @@
   </screenshots>
 
   <releases>
-    <release version="0.8.7" date="2026-09-22">
+    <release version="0.8.8" date="2026-09-23">
       <url type="details">
-        https://github.com/riyaniii/Kaghez/releases/tag/v0.8.7
+        https://github.com/riyaniii/Kaghez/releases/tag/v0.8.8
       </url>
       <description translate="no">
         <p>
-          Initial release of Kaghez.
+          Added managed server.
         </p>
       </description>
     </release>

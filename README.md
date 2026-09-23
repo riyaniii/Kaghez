@@ -3,8 +3,6 @@
 
 Kaghez allows you to discover, download and read comics with a beautiful looking UI, and natural touchpad gestures.
 
-It requires a running [Suwayomi Server](https://github.com/Suwayomi/Suwayomi-Server#running-the-jar-release-directly).
-
 ## Features
 
 - A beautiful libadwaita UI
@@ -13,6 +11,8 @@ It requires a running [Suwayomi Server](https://github.com/Suwayomi/Suwayomi-Ser
 - Built-in reader with single-page, double-page, and webtoon (continuous scroll) modes
 - Natural touchpad gesture navigation (Pinch to zoom/two-finger scroll to move)
 
+Kaghez connects to/runs [Suwayomi](https://github.com/Suwayomi/Suwayomi-Server) as the backend.
+
 ### Installation
 You can install Kaghez as flatpak
 <p>
@@ -20,8 +20,6 @@ You can install Kaghez as flatpak
     <img src="https://img.shields.io/badge/⬇%20Download%20Kaghez-GitHub%20Releases-181717?style=for-the-badge&logo=github&logoColor=white" height="60">
   </a>
 </p>
-
-You need to run [Suwayomi](https://github.com/Suwayomi/Suwayomi-Server) and pass it's URL when the app starts.
 
 <img width="225" height="275" alt="image" src="https://github.com/user-attachments/assets/6f7dfef2-28de-46d2-a401-76d86655bd68" />
 

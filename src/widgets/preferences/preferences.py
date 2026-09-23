@@ -89,3 +89,8 @@ class KaghezPreferences(Adw.PreferencesDialog):
     @Gtk.Template.Callback()
     def on_stores_activated(self, row):
         ExtensionStoresDialog().present(self)
+
+    @Gtk.Template.Callback()
+    def on_open_browser_activated(self, row):
+        launcher = Gtk.UriLauncher(uri=self.suwayomi.url)
+        launcher.launch(self.get_root(), None, None)

@@ -41,20 +41,42 @@ template $KaghezHomePage : Adw.NavigationPage {
             margin-start: 12;
             margin-end: 12;
 
-            Adw.Clamp {
-              orientation: vertical;
-              maximum-size: 350;
-              child: Adw.Carousel manga_carousel {
-                styles [
-                  "rounded"
-                ]
-                hexpand: true;
-                height-request: 300;
-              };
-            }
+            Gtk.Stack carousel_stack {
+              transition-type: crossfade;
+              vhomogeneous: false;
 
-            Adw.CarouselIndicatorDots {
-              carousel: manga_carousel;
+              Gtk.StackPage {
+                name: "carousel";
+                child: Gtk.Box {
+                  orientation: vertical;
+                  spacing: 6;
+
+                  Adw.Clamp {
+                    orientation: vertical;
+                    maximum-size: 350;
+                    child: Adw.Carousel manga_carousel {
+                      styles [
+                        "rounded"
+                      ]
+                      hexpand: true;
+                      height-request: 300;
+                    };
+                  }
+
+                  Adw.CarouselIndicatorDots {
+                    carousel: manga_carousel;
+                  }
+                };
+              }
+
+              Gtk.StackPage {
+                name: "empty";
+                child: Adw.StatusPage {
+                  icon-name: "user-home-symbolic";
+                  title: _("Hello!");
+                  description: _("Your library is empty");
+                };
+              }
             }
           };
         };

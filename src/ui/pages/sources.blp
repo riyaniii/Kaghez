@@ -5,10 +5,11 @@ using Gio 2.0;
 template $KaghezSourcesPage : Adw.NavigationPage {
   title: "Sources";
   tag: "sources";
+  map => $on_shown();
 
   child: Gtk.Stack {
     transition-type: crossfade;
-    visible-child-name: bind $get_page(store.n-items) as <string>;
+    visible-child-name: bind $get_page((template.sources as <Gio.ListStore>).n-items) as <string>;
 
     Gtk.StackPage {
       name: "greeter";
@@ -53,9 +54,7 @@ template $KaghezSourcesPage : Adw.NavigationPage {
                   match-mode: substring;
                 };
 
-                model: Gio.ListStore store {
-                  item-type: typeof<$KaghezSource>;
-                };
+                model: bind template.sources;
               };
             };
           };

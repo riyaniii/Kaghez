@@ -73,6 +73,8 @@ class Suwayomi(GObject.Object):
 
         self.download_queue = Gio.ListStore.new(item_type=models.Download)
         self.library = Gio.ListStore.new(item_type=models.Manga)
+        self.sources = Gio.ListStore.new(item_type=models.Source)
+        self.extensions = Gio.ListStore.new(item_type=models.Extension)
 
     def reconnect(self, url: str):
         self.session = None
@@ -124,16 +126,21 @@ class Suwayomi(GObject.Object):
         return await asyncio.shield(self.pending[key])
 
 
-    async def getPaintableBytes(self, url: str) -> bytes | None:
-        try:
-            response = await self.http.get(url, timeout=10)
-        except httpx.HTTPError as e:
-            print(f"[getPaintableBytes] request failed for {url}: {type(e).__name__}: {e}")
-            return None
-        if response.status_code != 200:
-            print(f"[getPaintableBytes] status {response.status_code} for {url}")
-            return None
-        return response.content
+    async def getPaintableBytes(self, url: str, retries: int = 1) -> bytes | None:
+        for attempt in range(retries + 1):
+            try:
+                response = await self.http.get(url, timeout=10)
+            except httpx.HTTPError as e:
+                if attempt < retries:
+                    await asyncio.sleep(0.3 * (attempt + 1))
+                    continue
+                print(f"[getPaintableBytes] request failed for {url}: {type(e).__name__}: {e}")
+                return None
+            if response.status_code != 200:
+                print(f"[getPaintableBytes] status {response.status_code} for {url}")
+                return None
+            return response.content
+        return None
 
     async def getPaintable(self, url: str) -> Gdk.Paintable | None:
         raw_bytes = await self.shared(('bytes', url), lambda: self.loadBytes(url))
@@ -317,17 +324,31 @@ class Suwayomi(GObject.Object):
         elif not in_library and found:
             self.library.remove(position)
 
-    async def getExtensions(self, first: int | None = None, after: str | None = None) -> list:
-        result = await self.query(GET_EXTENSIONS, variable_values={"first": first, "after": after})
-        nodes = result.get('extensions', {}).get('nodes', [])
-        extension_models = [self.makeModel(node, 'Extension') for node in nodes]
-        return [m for m in extension_models if m is not None]
+    async def refreshExtensions(self):
+        await self.shared(('extensions',), self.loadExtensions)
 
-    async def getSources(self, first: int | None = None, after: str | None = None) -> list:
-        result = await self.query(GET_SOURCES, variable_values={"first": first, "after": after})
-        nodes = result.get('sources', {}).get('nodes', [])
+    async def loadExtensions(self):
+        result = await self.query(GET_EXTENSIONS)
+        if 'extensions' not in result:
+            return  # request failed, keep what we have
+        nodes = result['extensions'].get('nodes') or []
+        extension_models = [self.makeModel(node, 'Extension') for node in nodes]
+        extension_models = [m for m in extension_models if m is not None]
+        if list(self.extensions) != extension_models:
+            self.extensions.splice(0, self.extensions.get_n_items(), extension_models)
+
+    async def refreshSources(self):
+        await self.shared(('sources',), self.loadSources)
+
+    async def loadSources(self):
+        result = await self.query(GET_SOURCES)
+        if 'sources' not in result:
+            return
+        nodes = result['sources'].get('nodes') or []
         source_models = [self.makeModel(node, 'Source') for node in nodes]
-        return [m for m in source_models if m is not None]
+        source_models = [m for m in source_models if m is not None]
+        if list(self.sources) != source_models:
+            self.sources.splice(0, self.sources.get_n_items(), source_models)
 
     async def getSourceManga(
         self,

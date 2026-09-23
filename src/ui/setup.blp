@@ -3,7 +3,8 @@ using Adw 1;
 
 template $KaghezSetupWindow : Adw.ApplicationWindow {
   default-width: 400;
-  default-height: 500;
+  default-height: 525;
+  resizable: false;
 
   content: Adw.ToolbarView {
     [top]
@@ -11,41 +12,39 @@ template $KaghezSetupWindow : Adw.ApplicationWindow {
       show-title: false;
     }
 
-    content: Adw.StatusPage {
+    content: Adw.StatusPage status_page {
       icon-name: "network-server-symbolic";
-      title: _("Connect to Suwayomi");
-      description: _("Enter the address of your Suwayomi server");
+      title: "Connect to Suwayomi";
+      description: "Run Suwayomi locally or connect to an existing server";
 
       child: Adw.Clamp {
         maximum-size: 340;
-        child: Gtk.Box {
-          orientation: vertical;
-          spacing: 20;
+        child: Gtk.ListBox mode_list {
+          styles ["boxed-list"]
+          selection-mode: none;
 
-          Gtk.ListBox {
-            styles [
-              "boxed-list"
-            ]
-            selection-mode: none;
+          Adw.ActionRow local_row {
+            title: "Run Locally";
+            subtitle: "A Suwayomi Server managed by the app";
+            activatable: true;
+            activated => $on_local_activated();
 
-            Adw.EntryRow url_row {
-              title: _("Server URL");
-              input-purpose: url;
-              text: "http://localhost:4567";
-              changed => $on_url_changed();
-              entry-activated => $on_connect_clicked();
+            [suffix]
+            Gtk.Image {
+              icon-name: "go-next-symbolic";
             }
           }
 
-          Gtk.Button connect_button {
-            styles [
-              "suggested-action",
-              "pill"
-            ]
-            label: _("Connect");
-            sensitive: false;
-            halign: center;
-            clicked => $on_connect_clicked();
+          Adw.ActionRow remote_row {
+            title: "Remote Server";
+            subtitle: "Connect to an external server with its URL";
+            activatable: true;
+            activated => $on_remote_activated();
+
+            [suffix]
+            Gtk.Image {
+              icon-name: "go-next-symbolic";
+            }
           }
         };
       };

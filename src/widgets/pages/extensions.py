@@ -8,18 +8,22 @@ from ...integrations import models
 class ExtensionsPage(Adw.NavigationPage):
     __gtype_name__ = "KaghezExtensionsPage"
 
-    store = Gtk.Template.Child()
-
     search_text = GObject.Property(type=str)
+    extensions = GObject.Property(type=Gio.ListStore)
 
     def __init__(self):
         super().__init__()
         self.suwayomi = Gio.Application.get_default().suwayomi
+        self.extensions = self.suwayomi.extensions
 
-        asyncio.create_task(self.load())
+        asyncio.create_task(self.suwayomi.refreshExtensions())
 
     def set_search_text(self, text: str):
         self.search_text = text.strip()
+
+    @Gtk.Template.Callback()
+    def on_shown(self, *_):
+        asyncio.create_task(self.suwayomi.refreshExtensions())
 
     @Gtk.Template.Callback()
     def get_page(self, obj, count):
@@ -67,7 +71,6 @@ class ExtensionsPage(Adw.NavigationPage):
         if lang == "all":
             title = "All languages"
         elif lang:
-            print(lang)
             title = lang.upper()
         else:
             title = "Other"
@@ -82,7 +85,3 @@ class ExtensionsPage(Adw.NavigationPage):
     def on_activate(self, listview, position):
         item = listview.get_model().get_item(position)
         listview.activate_action("app.show_extension", GLib.Variant("s", item.pkg_name))
-
-    async def load(self):
-        extensions = await self.suwayomi.getExtensions()
-        self.store.splice(0, 0, extensions)

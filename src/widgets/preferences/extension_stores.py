@@ -31,6 +31,7 @@ class ExtensionStoresDialog(Adw.Dialog):
         row.add_suffix(button)
 
         self.stores_group.add(row)
+        self.rows[url] = row
 
     def save(self):
         asyncio.create_task(self.suwayomi.setExtensionStores(list(self.rows)))

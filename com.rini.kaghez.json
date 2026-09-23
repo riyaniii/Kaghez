@@ -4,7 +4,8 @@
     "runtime-version": "50",
     "sdk": "org.gnome.Sdk",
     "sdk-extensions": [
-        "org.freedesktop.Sdk.Extension.rust-stable"
+        "org.freedesktop.Sdk.Extension.rust-stable",
+        "org.freedesktop.Sdk.Extension.openjdk21"
     ],
     "command": "kaghez",
     "finish-args": [
@@ -12,7 +13,8 @@
         "--share=ipc",
         "--socket=fallback-x11",
         "--device=dri",
-        "--socket=wayland"
+        "--socket=wayland",
+        "--env=PATH=/app/jre/bin:/app/bin:/usr/bin"
     ],
     "build-options": {
         "build-args": [
@@ -52,6 +54,13 @@
                     "url": "https://gitlab.gnome.org/GNOME/glycin.git",
                     "tag": "2.2.0"
                 }
+            ]
+        },
+        {
+            "name": "openjdk",
+            "buildsystem": "simple",
+            "build-commands": [
+                "/usr/lib/sdk/openjdk21/install.sh"
             ]
         },
         {

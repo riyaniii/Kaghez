@@ -54,13 +54,8 @@ class SearchPage(Adw.NavigationPage):
         self.reset_progress()
         self.state = "result"
 
-        try:
-            sources = await self.suwayomi.getSources()
-        except Exception as e:
-            print(f"[search] getSources failed: {e!r}")
-            self.state = "empty"
-            return
-
+        await self.suwayomi.refreshSources()
+        sources = list(self.suwayomi.sources)
         if len(sources) == 0:
             self.state = "empty"
             return

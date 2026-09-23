@@ -63,5 +63,32 @@ template $KaghezPreferencesDialog : Adw.PreferencesDialog {
         }
       }
     }
+    Adw.PreferencesGroup {
+      title: _("Server");
+
+      Adw.ActionRow {
+        title: _("Suwayomi Instance");
+        subtitle: _("Switch between a local or remote server");
+        activatable: true;
+        action-name: "app.change-instance";
+
+        [suffix]
+        Gtk.Image {
+          icon-name: "go-next-symbolic";
+        }
+      }
+
+      Adw.ActionRow {
+        title: _("Open in Browser");
+        subtitle: _("Open the server's web interface");
+        activatable: true;
+        activated => $on_open_browser_activated();
+
+        [suffix]
+        Gtk.Image {
+          icon-name: "external-link-symbolic";
+        }
+      }
+    }
   }
 }

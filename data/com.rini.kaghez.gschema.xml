@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="kaghez">
 	<schema id="com.rini.kaghez" path="/com/rini/kaghez/">
+		<key name="suwayomi-mode" type="s">
+			<default>''</default>
+			<summary>Suwayomi connection mode</summary>
+			<description>Either "local" (bundled server) or "remote" (user-provided URL). Empty means not yet configured.</description>
+		</key>
 		<key name="suwayomi-url" type="s">
 			<default>''</default>
 			<summary>Suwayomi server URL</summary>
-			<description>The URL of the Suwayomi server Kaghez connects to.</description>
+			<description>The URL of the Suwayomi server Kaghez connects to. Only meaningful when suwayomi-mode is "remote".</description>
 		</key>
 	</schema>
 </schemalist>

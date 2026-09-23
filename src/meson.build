@@ -84,10 +84,11 @@ configure_file(
 kaghez_sources = [
   '__init__.py',
   'main.py',
-  'actions.py'
+  'actions.py',
 ]
 
 install_data(kaghez_sources, install_dir: moduledir)
+install_data('Suwayomi-Server-v2.3.2361.jar', install_dir: pkgdatadir)
 
 subdir('integrations')
 subdir('widgets')

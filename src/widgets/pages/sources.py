@@ -8,18 +8,22 @@ from ...integrations import models
 class SourcesPage(Adw.NavigationPage):
     __gtype_name__ = "KaghezSourcesPage"
 
-    store = Gtk.Template.Child()
-
     search_text = GObject.Property(type=str)
+    sources = GObject.Property(type=Gio.ListStore)
 
     def __init__(self):
         super().__init__()
         self.suwayomi = Gio.Application.get_default().suwayomi
+        self.sources = self.suwayomi.sources
 
-        asyncio.create_task(self.load())
+        asyncio.create_task(self.suwayomi.refreshSources())
 
     def set_search_text(self, text: str):
         self.search_text = text.strip()
+
+    @Gtk.Template.Callback()
+    def on_shown(self, *_):
+        asyncio.create_task(self.suwayomi.refreshSources())
 
     @Gtk.Template.Callback()
     def get_page(self, obj, count):
@@ -80,7 +84,3 @@ class SourcesPage(Adw.NavigationPage):
     def on_activate(self, listview, position):
         item = listview.get_model().get_item(position)
         listview.activate_action("app.show_source", GLib.Variant("s", item.id))
-
-    async def load(self):
-        sources = await self.suwayomi.getSources()
-        self.store.splice(0, 0, sources)

@@ -21,8 +21,6 @@ You can install Kaghez as flatpak
   </a>
 </p>
 
-<img width="225" height="275" alt="image" src="https://github.com/user-attachments/assets/6f7dfef2-28de-46d2-a401-76d86655bd68" />
-
 
 ## Screenshots
 

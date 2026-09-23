@@ -114,6 +114,16 @@ query GetChaptersManga($mangaId: Int!, $first: Int, $after: Cursor) {
 }
 """)
 
+FETCH_EXTENSIONS = gql("""
+mutation FetchExtensions($input: FetchExtensionsInput = {}) {
+  fetchExtensions(input: $input) {
+    extensions {
+      """ + EXTENSION_FULL_FIELDS + """
+    }
+  }
+}
+""")
+
 UPDATE_EXTENSION = gql("""
 mutation UpdateExtension($pkgName: String!, $install: Boolean, $update: Boolean, $uninstall: Boolean) {
   updateExtension(

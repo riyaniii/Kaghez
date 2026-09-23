@@ -328,10 +328,11 @@ class Suwayomi(GObject.Object):
         await self.shared(('extensions',), self.loadExtensions)
 
     async def loadExtensions(self):
-        result = await self.query(GET_EXTENSIONS)
-        if 'extensions' not in result:
+        result = await self.query(FETCH_EXTENSIONS, retries=2)
+        data = result.get('fetchExtensions')
+        if data is None:
             return  # request failed, keep what we have
-        nodes = result['extensions'].get('nodes') or []
+        nodes = data.get('extensions') or []
         extension_models = [self.makeModel(node, 'Extension') for node in nodes]
         extension_models = [m for m in extension_models if m is not None]
         if list(self.extensions) != extension_models:

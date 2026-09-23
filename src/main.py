@@ -198,7 +198,7 @@ class KaghezApplication(Adw.Application):
         about = Adw.AboutDialog(application_name='Kaghez',
                                 application_icon='com.rini.kaghez',
                                 developer_name='Riyan Parvez',
-                                version='0.8.7',
+                                version='0.8.8',
                                 translator_credits = _('translator-credits'),
                                 developers=['Riyan Parvez (rini)'],
                                 copyright='© 2026 Riyan Parvez')

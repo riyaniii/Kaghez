@@ -11,8 +11,7 @@
   <description>
     <p>
       Kaghez allows you to discover, download and read comics with a beautiful
-      looking UI, and natural touchpad gestures. It requires a running
-      Suwayomi Server.
+      looking UI, and natural touchpad gestures.
     </p>
   </description>
 
@@ -34,7 +33,7 @@
 
   <branding>
     <color type="primary" scheme_preference="light">#FFD700</color>
-    <color type="primary" scheme_preference="dark">#C7D0EC</color>
+    <color type="primary" scheme_preference="dark">#3F4F82</color>
   </branding>
 
   <screenshots>

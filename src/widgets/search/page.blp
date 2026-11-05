@@ -9,7 +9,7 @@ template $KaoriSearchPage : Adw.NavigationPage {
     [top]
     Adw.HeaderBar {
       title-widget: Gtk.Entry search_entry {
-        placeholder-text: _("Find a manga");
+        placeholder-text: _("Find a comic");
         primary-icon-name: "system-search-symbolic";
         hexpand: true;
         progress-fraction: bind $get_progress(template.completed_sources, template.total_sources) as <double>;

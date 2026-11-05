@@ -14,6 +14,8 @@ MODES = (
 
 DISPLAY_MODES = ("compact", "comfortable")
 
+STARTUP_PAGES = ("home", "library", "search", "history", "browse", "updates", "downloads")
+
 SWITCHES = {
     "cbz_row": "downloadAsCbz",
     "flaresolverr_fallback_row": "flareSolverrAsResponseFallback",
@@ -64,6 +66,8 @@ def key_of(row) -> str:
 class KaoriPreferences(Adw.PreferencesDialog):
     __gtype_name__ = "KaoriPreferencesDialog"
 
+    startup_page_row = Gtk.Template.Child()
+    resume_row = Gtk.Template.Child()
     orientation_row = Gtk.Template.Child()
     direction_row = Gtk.Template.Child()
     display_mode_row = Gtk.Template.Child()
@@ -116,10 +120,16 @@ class KaoriPreferences(Adw.PreferencesDialog):
                            Gio.SettingsBindFlags.DEFAULT)
         self.settings.bind('library-show-download-badge', self.download_badge_row, 'active',
                            Gio.SettingsBindFlags.DEFAULT)
+        self.settings.bind('resume-last-chapter', self.resume_row, 'active',
+                           Gio.SettingsBindFlags.DEFAULT)
 
         display_mode = self.settings.get_string('library-display-mode')
         if display_mode in DISPLAY_MODES:
             self.display_mode_row.set_selected(DISPLAY_MODES.index(display_mode))
+
+        startup_page = self.settings.get_string('startup-page')
+        if startup_page in STARTUP_PAGES:
+            self.startup_page_row.set_selected(STARTUP_PAGES.index(startup_page))
 
         self.mode_stack = Adw.ViewStack()
         for name, title, icon in MODES:
@@ -174,6 +184,15 @@ class KaoriPreferences(Adw.PreferencesDialog):
     def on_reading_mode_changed(self, stack, pspec):
         self.update_orientation_sensitivity()
         self.save_reading_mode()
+
+    @Gtk.Template.Callback()
+    def on_startup_page_changed(self, row, pspec):
+        settings = getattr(self, "settings", None)
+        if settings is None:
+            return
+        page = STARTUP_PAGES[row.get_selected()]
+        if settings.get_string('startup-page') != page:
+            settings.set_string('startup-page', page)
 
     @Gtk.Template.Callback()
     def on_display_mode_changed(self, row, pspec):

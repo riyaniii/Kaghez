@@ -63,6 +63,24 @@ template $KaoriPreferencesDialog : Adw.PreferencesDialog {
         subtitle: _("Show downloaded chapters on covers");
       }
     }
+
+    Adw.PreferencesGroup {
+      title: _("Startup");
+
+      Adw.ComboRow startup_page_row {
+        title: _("Open On");
+        subtitle: _("The page shown when Kaori starts");
+        model: Gtk.StringList {
+          strings [_("Home"), _("Library"), _("Search"), _("History"), _("Browse"), _("Updates"), _("Downloads")]
+        };
+        notify::selected => $on_startup_page_changed();
+      }
+
+      Adw.SwitchRow resume_row {
+        title: _("Resume Last Chapter");
+        subtitle: _("Reopen the chapter you were reading when you quit");
+      }
+    }
   }
 
   Adw.PreferencesPage {

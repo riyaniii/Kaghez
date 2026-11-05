@@ -215,7 +215,10 @@ class PagedReader(ReaderBase):
 
     @property
     def scrolled_window(self):
-        return self.get_child()
+        widget = self.get_child()
+        while widget is not None and not isinstance(widget, Gtk.ScrolledWindow):
+            widget = widget.get_child() if hasattr(widget, "get_child") else None
+        return widget
 
     @property
     def step(self):

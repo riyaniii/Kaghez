@@ -78,7 +78,7 @@ class MangaMenu:
         self.widget.activate_action("app.edit_categories", GLib.Variant("i", self.get_manga().id))
 
     def on_download(self, *args):
-        asyncio.create_task(DownloadDialog.choose(self.get_manga(), self.widget))
+        asyncio.create_task(DownloadDialog.start(self.get_manga(), self.widget))
 
     def on_remove(self, *args):
         asyncio.create_task(self.set_library(False))

@@ -1,15 +1,7 @@
 import asyncio
 from gettext import gettext as _, ngettext
 
-from gi.repository import Adw, Gio, GLib, Gtk
-
-PRESET_COUNTS = {
-    "preset_next": 1,
-    "preset_next_5": 5,
-    "preset_next_10": 10,
-    "preset_next_25": 25,
-    "preset_unread": None,
-}
+from gi.repository import Adw, Gio, GLib, GObject, Gtk
 
 
 def chapter_title(name, number):
@@ -22,32 +14,75 @@ def chapter_title(name, number):
 class DownloadDialog(Adw.Dialog):
     __gtype_name__ = "KaoriDownloadDialog"
 
-    from_row = Gtk.Template.Child()
-    to_row = Gtk.Template.Child()
-    skip_read_row = Gtk.Template.Child()
-    summary_row = Gtk.Template.Child()
-    download_button = Gtk.Template.Child()
+    # Properties bound from the blueprint
+    names = GObject.Property(type=Gtk.StringList)
+    summary = GObject.Property(type=str, default="")
+    can_download = GObject.Property(type=bool, default=False)
 
-    ready = False
+    # Class-level defaults so bindings can read them during template init
+    chapters = ()
+    first_unread = 0
+    _from_index = 0
+    _to_index = 0
+    _skip_read = False
+
+    # --- bound state -------------------------------------------------------
+
+    @GObject.Property(type=int)
+    def from_index(self):
+        return self._from_index
+
+    @from_index.setter
+    def from_index(self, value):
+        self._from_index = value
+        if value > self._to_index:
+            self.to_index = value
+        self.refresh()
+
+    @GObject.Property(type=int)
+    def to_index(self):
+        return self._to_index
+
+    @to_index.setter
+    def to_index(self, value):
+        self._to_index = value
+        if value < self._from_index:
+            self.from_index = value
+        self.refresh()
+
+    @GObject.Property(type=bool, default=False)
+    def skip_read(self):
+        return self._skip_read
+
+    @skip_read.setter
+    def skip_read(self, value):
+        self._skip_read = value
+        self.refresh()
+
+    # --- setup -------------------------------------------------------------
 
     def __init__(self, model):
         super().__init__()
-        self.chapters = model.chapters
-        self.total = len(self.chapters)
+        self.chapters = list(model.chapters)
 
-        self.first_unread = 1
         unread = model.first_unread_chapter
-        if unread is not None:
-            for index, chapter in enumerate(self.chapters):
-                if chapter.id == unread.id:
-                    self.first_unread = index + 1
-                    break
+        self.first_unread = next(
+            (i for i, c in enumerate(self.chapters) if unread is not None and c.id == unread.id),
+            0,
+        )
 
-        names = Gtk.StringList()
-        for chapter in self.chapters:
-            names.append(chapter_title(chapter.name, chapter.chapter_number))
-        self.from_row.set_model(names)
-        self.to_row.set_model(names)
+        self.names = Gtk.StringList.new(
+            [chapter_title(c.name, c.chapter_number) for c in self.chapters]
+        )
+
+        actions = Gio.SimpleActionGroup()
+        preset = Gio.SimpleAction.new("preset", GLib.VariantType("i"))
+        preset.connect("activate", self.on_preset)
+        actions.add_action(preset)
+        download = Gio.SimpleAction.new("download", None)
+        download.connect("activate", self.on_download)
+        actions.add_action(download)
+        self.insert_action_group("dialog", actions)
 
         self.select_range(self.first_unread, self.first_unread + 4)
 
@@ -64,6 +99,34 @@ class DownloadDialog(Adw.Dialog):
             return
         DownloadDialog(model).present(parent)
 
+    # --- logic -------------------------------------------------------------
+
+    def select_range(self, start, end):
+        last = len(self.chapters) - 1
+        end = max(0, min(end, last))
+        start = max(0, min(start, end))
+        # "to" first so the from/to clamping in the setters never fights us
+        self.to_index = end
+        self.from_index = start
+
+    def get_pending(self):
+        selected = self.chapters[self._from_index:self._to_index + 1]
+        return [
+            c for c in selected
+            if not c.is_downloaded and not (self._skip_read and c.is_read)
+        ]
+
+    def refresh(self):
+        if not self.chapters:
+            return
+        count = len(self.get_pending())
+        if count:
+            text = ngettext("{} chapter will be downloaded", "{} chapters will be downloaded", count)
+            self.summary = text.format(count)
+        else:
+            self.summary = _("Nothing to download")
+        self.can_download = count > 0
+
     async def submit(self):
         chapters = self.get_pending()
         if not chapters:
@@ -78,81 +141,17 @@ class DownloadDialog(Adw.Dialog):
         message = ngettext("Downloading {} chapter", "Downloading {} chapters", count)
         self.show_toast(message.format(count))
 
-    def select_range(self, start, end):
-        start = max(1, min(start, self.total))
-        end = max(start, min(end, self.total))
-        self.ready = False
-        self.from_row.set_selected(start - 1)
-        self.to_row.set_selected(end - 1)
-        self.ready = True
-        self.update_summary()
+    # --- actions -----------------------------------------------------------
 
-    def get_range(self):
-        start = self.from_row.get_selected() + 1
-        end = self.to_row.get_selected() + 1
-        return start, end
+    def on_preset(self, action, param):
+        count = param.get_int32()
+        if count < 0:                      # All
+            self.select_range(0, len(self.chapters) - 1)
+        elif count == 0:                   # Unread
+            self.select_range(self.first_unread, len(self.chapters) - 1)
+        else:                              # Next N
+            self.select_range(self.first_unread, self.first_unread + count - 1)
 
-    def get_pending(self):
-        start, end = self.get_range()
-        skip_read = self.skip_read_row.get_active()
-        pending = []
-        for chapter in self.chapters[start - 1:end]:
-            if chapter.is_downloaded:
-                continue
-            if skip_read and chapter.is_read:
-                continue
-            pending.append(chapter)
-        return pending
-
-    def update_summary(self):
-        count = len(self.get_pending())
-        if count == 0:
-            self.summary_row.set_title(_("Nothing to download"))
-        else:
-            text = ngettext("{} chapter will be downloaded", "{} chapters will be downloaded", count)
-            self.summary_row.set_title(text.format(count))
-        self.download_button.set_sensitive(count > 0)
-
-    @Gtk.Template.Callback()
-    def on_preset_clicked(self, button):
-        name = Gtk.Buildable.get_buildable_id(button)
-        if name == "preset_all":
-            self.select_range(1, self.total)
-            return
-        count = PRESET_COUNTS[name]
-        start = self.first_unread
-        if count is None:
-            end = self.total
-        else:
-            end = start + count - 1
-        self.select_range(start, end)
-
-    @Gtk.Template.Callback()
-    def on_from_changed(self, row, pspec):
-        if not self.ready:
-            return
-        if self.from_row.get_selected() > self.to_row.get_selected():
-            self.ready = False
-            self.to_row.set_selected(self.from_row.get_selected())
-            self.ready = True
-        self.update_summary()
-
-    @Gtk.Template.Callback()
-    def on_to_changed(self, row, pspec):
-        if not self.ready:
-            return
-        if self.to_row.get_selected() < self.from_row.get_selected():
-            self.ready = False
-            self.from_row.set_selected(self.to_row.get_selected())
-            self.ready = True
-        self.update_summary()
-
-    @Gtk.Template.Callback()
-    def on_skip_read_changed(self, row, pspec):
-        if self.ready:
-            self.update_summary()
-
-    @Gtk.Template.Callback()
-    def on_download_clicked(self, button):
+    def on_download(self, action, param):
         self.close()
         asyncio.create_task(self.submit())

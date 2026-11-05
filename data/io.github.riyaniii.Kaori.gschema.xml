@@ -1,49 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="kaori">
-<schema id="io.github.riyaniii.Kaori" path="/io/github/riyaniii/Kaori/">
-<key name="suwayomi-mode" type="s">
-<default>''</default>
-<summary>Suwayomi connection mode</summary>
-<description>Either "local" (bundled server) or "remote" (user-provided URL). Empty means not yet configured.</description>
-</key>
-<key name="suwayomi-url" type="s">
-<default>''</default>
-<summary>Suwayomi server URL</summary>
-<description>The URL of the Suwayomi server the app connects to. Only meaningful when suwayomi-mode is "remote".</description>
-</key>
-<key name="run-in-background" type="b">
-<default>true</default>
-<summary>Keep the server running in the background</summary>
-<description>Keep the local Suwayomi server and the app process running after the window is closed.</description>
-</key>
-<key name="run-on-startup" type="b">
-<default>true</default>
-<summary>Start the server on login</summary>
-<description>Start the local Suwayomi server in the background when the user logs in.</description>
-</key>
-<key name="welcome-shown" type="b">
-<default>false</default>
-<summary>Welcome dialog shown</summary>
-<description>Whether the welcome dialog explaining sources and the Mihon getting started guide has already been shown.</description>
-</key>
-<key name="library-display-mode" type="s">
-<choices>
-<choice value="compact"/>
-<choice value="comfortable"/>
-</choices>
-<default>'comfortable'</default>
-<summary>Library display mode</summary>
-<description>How manga are shown in the library grid.</description>
-</key>
-<key name="library-show-unread-badge" type="b">
-<default>true</default>
-<summary>Show unread badges</summary>
-<description>Show the number of unread chapters on library covers.</description>
-</key>
-<key name="library-show-download-badge" type="b">
-<default>false</default>
-<summary>Show download badges</summary>
-<description>Show the number of downloaded chapters on library covers.</description>
-</key>
-</schema>
+  <schema id="io.github.riyaniii.Kaori" path="/io/github/riyaniii/Kaori/">
+    <key name="suwayomi-mode" type="s">
+      <default>''</default>
+      <summary>Suwayomi connection mode</summary>
+      <description>Either "local" (bundled server) or "remote" (user-provided URL). Empty means not yet configured.</description>
+    </key>
+    <key name="suwayomi-url" type="s">
+      <default>''</default>
+      <summary>Suwayomi server URL</summary>
+      <description>The URL of the Suwayomi server the app connects to. Only meaningful when suwayomi-mode is "remote".</description>
+    </key>
+    <key name="run-in-background" type="b">
+      <default>true</default>
+      <summary>Keep the server running in the background</summary>
+      <description>Keep the local Suwayomi server and the app process running after the window is closed.</description>
+    </key>
+    <key name="run-on-startup" type="b">
+      <default>true</default>
+      <summary>Start the server on login</summary>
+      <description>Start the local Suwayomi server in the background when the user logs in.</description>
+    </key>
+    <key name="welcome-shown" type="b">
+      <default>false</default>
+      <summary>Welcome dialog shown</summary>
+      <description>Whether the welcome dialog explaining sources and the Mihon getting started guide has already been shown.</description>
+    </key>
+    <key name="library-display-mode" type="s">
+      <choices>
+        <choice value="compact"/>
+        <choice value="comfortable"/>
+      </choices>
+      <default>'comfortable'</default>
+      <summary>Library display mode</summary>
+      <description>How manga are shown in the library grid.</description>
+    </key>
+    <key name="library-show-unread-badge" type="b">
+      <default>true</default>
+      <summary>Show unread badges</summary>
+      <description>Show the number of unread chapters on library covers.</description>
+    </key>
+    <key name="library-show-download-badge" type="b">
+      <default>false</default>
+      <summary>Show download badges</summary>
+      <description>Show the number of downloaded chapters on library covers.</description>
+    </key>
+    <key name="startup-page" type="s">
+      <choices>
+        <choice value="home"/>
+        <choice value="library"/>
+        <choice value="search"/>
+        <choice value="history"/>
+        <choice value="browse"/>
+        <choice value="updates"/>
+        <choice value="downloads"/>
+      </choices>
+      <default>'home'</default>
+      <summary>Startup page</summary>
+      <description>The page shown when the app opens. Values match the names of the pages in the main sidebar.</description>
+    </key>
+    <key name="resume-last-chapter" type="b">
+      <default>false</default>
+      <summary>Resume last chapter</summary>
+      <description>Reopen the chapter that was being read when the app was closed.</description>
+    </key>
+    <key name="last-reader" type="(ii)">
+      <default>(-1, -1)</default>
+      <summary>Last open reader</summary>
+      <description>The arguments of the show_reader action for the chapter open in the reader when the app was closed. (-1, -1) means none.</description>
+    </key>
+  </schema>
 </schemalist>

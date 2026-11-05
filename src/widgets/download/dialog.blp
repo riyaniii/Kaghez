@@ -19,34 +19,40 @@ template $KaoriDownloadDialog : Adw.Dialog {
           child-spacing: 6;
           justify: fill;
 
-          Gtk.Button preset_next {
+          Gtk.Button {
             label: _("Next");
-            clicked => $on_preset_clicked();
+            action-name: "dialog.preset";
+            action-target: "1";
           }
 
-          Gtk.Button preset_next_5 {
+          Gtk.Button {
             label: _("Next 5");
-            clicked => $on_preset_clicked();
+            action-name: "dialog.preset";
+            action-target: "5";
           }
 
-          Gtk.Button preset_next_10 {
+          Gtk.Button {
             label: _("Next 10");
-            clicked => $on_preset_clicked();
+            action-name: "dialog.preset";
+            action-target: "10";
           }
 
-          Gtk.Button preset_next_25 {
+          Gtk.Button {
             label: _("Next 25");
-            clicked => $on_preset_clicked();
+            action-name: "dialog.preset";
+            action-target: "25";
           }
 
-          Gtk.Button preset_unread {
+          Gtk.Button {
             label: _("Unread");
-            clicked => $on_preset_clicked();
+            action-name: "dialog.preset";
+            action-target: "0";
           }
 
-          Gtk.Button preset_all {
+          Gtk.Button {
             label: _("All");
-            clicked => $on_preset_clicked();
+            action-name: "dialog.preset";
+            action-target: "-1";
           }
         }
       }
@@ -54,29 +60,31 @@ template $KaoriDownloadDialog : Adw.Dialog {
       Adw.PreferencesGroup {
         title: _("Range");
 
-        Adw.ComboRow from_row {
+        Adw.ComboRow {
           title: _("From chapter");
           enable-search: true;
           expression: expr item as <Gtk.StringObject>.string;
-          notify::selected => $on_from_changed();
+          model: bind template.names;
+          selected: bind template.from-index bidirectional;
         }
 
-        Adw.ComboRow to_row {
+        Adw.ComboRow {
           title: _("To chapter");
           enable-search: true;
           expression: expr item as <Gtk.StringObject>.string;
-          notify::selected => $on_to_changed();
+          model: bind template.names;
+          selected: bind template.to-index bidirectional;
         }
 
-        Adw.SwitchRow skip_read_row {
+        Adw.SwitchRow {
           title: _("Skip read chapters");
-          notify::active => $on_skip_read_changed();
+          active: bind template.skip-read bidirectional;
         }
       }
 
       Adw.PreferencesGroup {
-        Adw.ActionRow summary_row {
-          title: _("Nothing to download");
+        Adw.ActionRow {
+          title: bind template.summary;
         }
       }
     };
@@ -88,14 +96,12 @@ template $KaoriDownloadDialog : Adw.Dialog {
       margin-top: 12;
       margin-bottom: 12;
 
-      Gtk.Button download_button {
+      Gtk.Button {
         hexpand: true;
-        styles [
-          "suggested-action",
-          "pill"
-        ]
+        styles ["suggested-action", "pill"]
         label: _("Download");
-        clicked => $on_download_clicked();
+        sensitive: bind template.can-download;
+        action-name: "dialog.download";
       }
     }
   };

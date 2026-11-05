@@ -46,13 +46,6 @@ template $KaoriReaderPage : Adw.NavigationPage {
         [end]
         Gtk.Box {
           orientation: horizontal;
-
-          Gtk.Button {
-            icon-name: "keys-symbolic";
-            action-name: "app.shortcuts";
-            tooltip-text: _("Show Gestures and Keyboard Controls");
-          }
-
           Gtk.Button {
             icon-name: "sliders-horizontal-symbolic";
             clicked => $on_settings_clicked();
